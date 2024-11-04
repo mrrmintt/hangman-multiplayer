@@ -2,7 +2,7 @@ const socket = io();
 let playerName = '';
 let currentGameId = '';
 
-// Initialize game UI
+// init
 function initializeGame() {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const lettersDiv = document.getElementById('letters');
@@ -26,6 +26,7 @@ function createGame() {
         showStatus('Please enter your name', 'error');
         return;
     }
+    resetChat(); 
     socket.emit('createGame', { playerName });
 }
 
@@ -38,6 +39,7 @@ function joinGame() {
     }
     currentGameId = gameId;
     socket.emit('joinGame', { gameId, playerName });
+    resetChat();
 }
 
 function makeGuess(letter) {
@@ -62,9 +64,36 @@ function hideNewGameElements() {
     document.getElementById('request-new-game').style.display = 'none';
 }
 
-
-
-
+function sendChatMessage() {
+    const chatInput = document.getElementById('chat-input');
+    const message = chatInput.value.trim();
+    
+    if (message) {
+        socket.emit('chatMessage', {
+            gameId: currentGameId,
+            message: message,
+            playerName: playerName
+        });
+        chatInput.value = '';
+    }
+}
+function displayChatMessage(message) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message';
+    messageDiv.innerHTML = `
+        <span class="chat-timestamp">[${message.timestamp}]</span>
+        <span class="chat-username">${message.username}:</span>
+        <span class="chat-text">${message.message}</span>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+function resetChat() {
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = ''; // Clear all chats + input field
+    document.getElementById('chat-input').value = ''; 
+}
 
 function updateGameState(gameState) {
     document.getElementById('word').textContent = gameState.word;
@@ -91,9 +120,12 @@ socket.on('gameCreated', ({ gameId, message }) => {
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
     showStatus(message, 'info');
+    
 });
 
-
+socket.on('chatMessage', (message) => {
+    displayChatMessage(message);
+});
 
 
 socket.on('newGameRequested', ({ requestedBy }) => {
@@ -106,6 +138,7 @@ socket.on('newGameStarted', ({ message, gameState }) => {
     showStatus(message, 'success');
     updateGameState(gameState);
     hideNewGameElements();
+    
 });
 
 socket.on('returnToMenu', ({ message }) => {
@@ -114,6 +147,7 @@ socket.on('returnToMenu', ({ message }) => {
         document.getElementById('menu').style.display = 'block';
         document.getElementById('game-container').style.display = 'none';
         hideNewGameElements();
+        
     }, 2000);
 });
 
@@ -136,7 +170,7 @@ socket.on('playerLeft', ({ message, gameState }) => {
 
 socket.on('gameStateUpdate', updateGameState);
 
-// In client.js, modify the gameOver event handler:
+
 socket.on('gameOver', ({ result, word, isHost }) => {
     const message = result === 'win' ? 
         `Congratulations! You've won! The word was: ${word}` :
@@ -153,5 +187,10 @@ socket.on('error', ({ message }) => {
     showStatus(message, 'error');
 });
 
-// Initialize game when page loads
+// init game when page loads
 document.addEventListener('DOMContentLoaded', initializeGame);
+document.getElementById('chat-input').addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+        sendChatMessage();
+    }
+});

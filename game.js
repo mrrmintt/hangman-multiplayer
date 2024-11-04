@@ -6,7 +6,7 @@ class Game {
         this.guessedLetters = new Set();
         this.currentPlayerIndex = 0;
         this.remainingGuesses = 6;
-        this.status = 'waiting'; // waiting, playing, finished
+        this.status = 'waiting'; 
     }
 
     getRandomWord() {
