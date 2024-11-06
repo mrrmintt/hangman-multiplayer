@@ -94,7 +94,15 @@ function resetChat() {
     chatMessages.innerHTML = ''; // Clear all chats + input field
     document.getElementById('chat-input').value = ''; 
 }
-
+function updatePendingResponses(received, total) {
+    const pendingDiv = document.getElementById('pending-responses');
+    if (received < total) {
+        pendingDiv.style.display = 'block';
+        pendingDiv.textContent = `Waiting for responses... (${received}/${total})`;
+    } else {
+        pendingDiv.style.display = 'none';
+    }
+}
 function updateGameState(gameState) {
     document.getElementById('word').textContent = gameState.word;
     document.getElementById('guesses').textContent = gameState.remainingGuesses;
@@ -102,6 +110,26 @@ function updateGameState(gameState) {
     const currentPlayerName = gameState.currentPlayer ? gameState.currentPlayer.name : 'Waiting...';
     document.getElementById('current-player').textContent = currentPlayerName;
 
+    // Update players list
+    const playersContainer = document.getElementById('players-container');
+    playersContainer.innerHTML = '';
+    
+    if (gameState.status === 'waiting') {
+        playersContainer.innerHTML = `
+            <div class="waiting-message">
+                Waiting for ${gameState.playersNeeded} more player${gameState.playersNeeded > 1 ? 's' : ''} to join...
+            </div>
+        `;
+    }
+
+    gameState.players.forEach(player => {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = `player-item ${player.id === gameState.currentPlayer?.id ? 'current-player' : ''}`;
+        playerDiv.textContent = `${player.name}${player.id === gameState.currentPlayer?.id ? ' (Current Turn)' : ''}`;
+        playersContainer.appendChild(playerDiv);
+    });
+
+    // Update letter buttons
     const buttons = document.getElementById('letters').getElementsByTagName('button');
     Array.from(buttons).forEach(button => {
         button.classList.toggle('used', 
@@ -126,7 +154,9 @@ socket.on('gameCreated', ({ gameId, message }) => {
 socket.on('chatMessage', (message) => {
     displayChatMessage(message);
 });
-
+socket.on('waitingForResponses', ({ received, total }) => {
+    showStatus(`Waiting for players to respond... (${received}/${total} responses)`, 'info');
+});
 
 socket.on('newGameRequested', ({ requestedBy }) => {
     const confirmDiv = document.getElementById('new-game-confirm');
@@ -135,22 +165,19 @@ socket.on('newGameRequested', ({ requestedBy }) => {
         `${requestedBy} wants to start a new game. Do you accept?`;
 });
 socket.on('newGameStarted', ({ message, gameState }) => {
-    showStatus(message, 'success');
+    showStatus('All players accepted! Starting new game!', 'success');
     updateGameState(gameState);
     hideNewGameElements();
-    
 });
 
 socket.on('returnToMenu', ({ message }) => {
-    showStatus(message, 'info');
+    showStatus('Game rejected. Returning to menu...', 'info');
     setTimeout(() => {
         document.getElementById('menu').style.display = 'block';
         document.getElementById('game-container').style.display = 'none';
         hideNewGameElements();
-        
     }, 2000);
 });
-
 
 
 

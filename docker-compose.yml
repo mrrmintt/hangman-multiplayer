@@ -11,3 +11,25 @@ services:
       - /usr/src/app/node_modules
     environment:
       - NODE_ENV=development
+      - DB_HOST=mariadb
+      - DB_USER=hangman_user
+      - DB_PASSWORD=hangman_password
+      - DB_NAME=hangman_db
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:latest
+    container_name: hangman-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=hangman_db
+      - MYSQL_USER=hangman_user
+      - MYSQL_PASSWORD=hangman_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:

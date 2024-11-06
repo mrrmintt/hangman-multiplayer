@@ -121,3 +121,34 @@
 .chat-send-button:hover {
     background-color: #1976D2;
 }
+
+.players-list {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.player-item {
+    padding: 5px 10px;
+    margin: 5px 0;
+    border-radius: 3px;
+}
+
+.current-player {
+    background-color: #e3f2fd;
+    font-weight: bold;
+}
+
+.waiting-message {
+    color: #666;
+    font-style: italic;
+}
+.pending-responses {
+    margin: 10px 0;
+    padding: 8px;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    text-align: center;
+    font-style: italic;
+}

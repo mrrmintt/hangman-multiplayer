@@ -5,8 +5,8 @@ class Game {
         this.word = this.getRandomWord();
         this.guessedLetters = new Set();
         this.currentPlayerIndex = 0;
-        this.remainingGuesses = 6;
-        this.status = 'waiting'; 
+        this.remainingGuesses = 8; // Increased guesses for 3 players
+        this.status = 'waiting'; // waiting, playing, finished
     }
 
     getRandomWord() {
@@ -15,12 +15,14 @@ class Game {
     }
 
     addPlayer(playerId, playerName) {
-        if (this.players.length < 2 && this.status === 'waiting') {
+        // Changed to allow 3 players
+        if (this.players.length < 3 && this.status === 'waiting') {
             if (this.players.some(p => p.name === playerName)) {
                 return { success: false, message: 'This name is already taken in this game' };
             }
             this.players.push({ id: playerId, name: playerName });
-            if (this.players.length === 2) {
+            // Start game when 3 players join
+            if (this.players.length === 3) {
                 this.status = 'playing';
             }
             return { success: true };
@@ -33,8 +35,13 @@ class Game {
         if (index !== -1) {
             this.players.splice(index, 1);
             if (this.status === 'playing') {
+                // If a player leaves during the game
                 this.status = 'finished';
                 return true;
+            }
+            // Adjust currentPlayerIndex if necessary
+            if (this.currentPlayerIndex >= this.players.length) {
+                this.currentPlayerIndex = 0;
             }
         }
         return false;
@@ -50,6 +57,7 @@ class Game {
             if (!this.word.includes(letter)) {
                 this.remainingGuesses--;
             }
+            // Move to next player
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
             
             if (this.isWordGuessed()) {
@@ -77,7 +85,8 @@ class Game {
             remainingGuesses: this.remainingGuesses,
             currentPlayer: this.getCurrentPlayer(),
             status: this.status,
-            players: this.players
+            players: this.players,
+            playersNeeded: 3 - this.players.length // New field to show how many players are still needed
         };
     }
 }

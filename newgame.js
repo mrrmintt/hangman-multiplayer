@@ -2,6 +2,7 @@ class NewGameManager {
     constructor(game) {
         this.game = game;
         this.pendingNewGameRequest = false;
+        this.playerResponses = new Map(); // Track responses from each player
     }
 
     requestNewGame(hostId) {
@@ -15,6 +16,7 @@ class NewGameManager {
         }
 
         this.pendingNewGameRequest = true;
+        this.playerResponses.clear(); // Clear previous responses
         return { success: true };
     }
 
@@ -23,26 +25,54 @@ class NewGameManager {
             return { success: false, message: 'No pending new game request' };
         }
 
-        this.pendingNewGameRequest = false;
+        // Record this player's response
+        this.playerResponses.set(playerId, accepted);
 
-        if (accepted) {
-            // Reset game state
-            this.game.word = this.game.getRandomWord();
-            this.game.guessedLetters = new Set();
-            this.game.remainingGuesses = 6;
-            this.game.status = 'playing';
-            this.game.currentPlayerIndex = 0; // First player starts
+        // Check if we have responses from all non-host players
+        const nonHostPlayers = this.game.players.filter(p => p.id !== this.game.players[0].id);
+        const haveAllResponses = nonHostPlayers.every(player => 
+            this.playerResponses.has(player.id)
+        );
+
+        if (haveAllResponses) {
+            // Check if all players accepted
+            const allAccepted = Array.from(this.playerResponses.values()).every(response => response);
             
-            return { 
-                success: true, 
-                result: 'accepted',
-                gameState: this.game.getGameState() 
-            };
+            this.pendingNewGameRequest = false;
+            this.playerResponses.clear();
+
+            if (allAccepted) {
+                // Reset game state
+                this.game.word = this.game.getRandomWord();
+                this.game.guessedLetters = new Set();
+                this.game.remainingGuesses = 8;
+                this.game.status = 'playing';
+                this.game.currentPlayerIndex = 0;
+                
+                return { 
+                    success: true, 
+                    result: 'accepted',
+                    gameState: this.game.getGameState() 
+                };
+            } else {
+                return { 
+                    success: true, 
+                    result: 'rejected'
+                };
+            }
         }
 
-        return { 
-            success: true, 
-            result: 'rejected'
+        // Still waiting for other responses
+        return {
+            success: true,
+            result: 'waiting'
+        };
+    }
+
+    getPendingResponses() {
+        return {
+            total: this.game.players.length - 1,
+            received: this.playerResponses.size
         };
     }
 }

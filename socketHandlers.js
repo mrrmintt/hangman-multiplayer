@@ -91,12 +91,16 @@ function handleRequestNewGame(io, socket, { gameId }) {
 
     const result = gameManager.requestNewGame(socket.id);
     if (result.success) {
-        const otherPlayer = game.players.find(p => p.id !== socket.id);
-        if (otherPlayer) {
-            io.to(otherPlayer.id).emit('newGameRequested', {
-                requestedBy: game.players.find(p => p.id === socket.id).name
+        // Find all other players (instead of just one)
+        const otherPlayers = game.players.filter(p => p.id !== socket.id);
+        const requestingPlayer = game.players.find(p => p.id === socket.id);
+        
+        // Send request to all other players
+        otherPlayers.forEach(player => {
+            io.to(player.id).emit('newGameRequested', {
+                requestedBy: requestingPlayer.name
             });
-        }
+        });
     } else {
         socket.emit('error', { message: result.message });
     }
@@ -111,11 +115,18 @@ function handleNewGameResponse(io, socket, { gameId, accepted }) {
 
     const result = gameManager.handleResponse(socket.id, accepted);
     if (result.success) {
-        if (result.result === 'accepted') {
+        if (result.result === 'waiting') {
+            // Notify all players about pending responses
+            const pendingResponses = gameManager.getPendingResponses();
+            io.to(gameId).emit('waitingForResponses', {
+                received: pendingResponses.received,
+                total: pendingResponses.total
+            });
+        } else if (result.result === 'accepted') {
             // Reset chat for new game
             chats.set(gameId, new Chat());
             io.to(gameId).emit('newGameStarted', { 
-                message: 'Starting new game!',
+                message: 'All players accepted! Starting new game!',
                 gameState: result.gameState 
             });
         } else {
