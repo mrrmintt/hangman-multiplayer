@@ -1,35 +1,42 @@
 services:
-  hangman:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: hangman-game
+  client:
+    build: ./client
+    ports:
+      - "80:80"
+    depends_on:
+      - socket-server
+    networks:
+      - hangman-network
+    environment:
+      - SOCKET_SERVER_URL=http://socket-server:3000
+
+  socket-server:
+    build: ./socket-server
     ports:
       - "3000:3000"
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    environment:
-      - NODE_ENV=development
-      - DB_HOST=mariadb
-      - DB_USER=hangman_user
-      - DB_PASSWORD=hangman_password
-      - DB_NAME=hangman_db
     depends_on:
-      - mariadb
-
-  mariadb:
-    image: mariadb:latest
-    container_name: hangman-db
+      - game-service
+      - chat-service
+    networks:
+      - hangman-network
     environment:
-      - MYSQL_ROOT_PASSWORD=root_password
-      - MYSQL_DATABASE=hangman_db
-      - MYSQL_USER=hangman_user
-      - MYSQL_PASSWORD=hangman_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mariadb_data:/var/lib/mysql
+      - GAME_SERVICE_URL=http://game-service:3001
+      - CHAT_SERVICE_URL=http://chat-service:3002
 
-volumes:
-  mariadb_data:
+  game-service:
+    build: ./game-service
+    ports:
+      - "3001:3001"
+    networks:
+      - hangman-network
+
+  chat-service:
+    build: ./chat-service
+    ports:
+      - "3002:3002"
+    networks:
+      - hangman-network
+
+networks:
+  hangman-network:
+    driver: bridge

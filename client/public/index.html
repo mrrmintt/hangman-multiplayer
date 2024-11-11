@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/style.css">
+    <title>Multiplayer Hangman</title>
+    
+</head>
+<body>
+    <div id="menu">
+        <h1>Multiplayer Hangman</h1>
+        <div>
+            <input type="text" id="player-name" placeholder="Enter your name">
+            <button onclick="createGame()">Create Game</button>
+            <div style="margin-top: 20px;">
+                <input type="text" id="game-id" placeholder="Enter game ID">
+                <button onclick="joinGame()">Join Game</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div class="players-list">
+            <h3>Players:</h3>
+            <div id="players-container"></div>
+        </div>
+        <h2>Game ID: <span id="current-game-id"></span></h2>
+        <p>Remaining guesses: <span id="guesses"></span></p>
+        <p>Current player: <span id="current-player"></span></p>
+        
+        <div class="word" id="word"></div>
+        <div class="letters" id="letters"></div>
+        <div id="status"></div>
+        <div id="request-new-game" style="display: none; margin-top: 20px;">
+            <button onclick="requestNewGame()" class="action-button">Start New Game</button>
+        </div>
+        <div id="pending-responses" class="pending-responses" style="display: none;"></div>
+        <div id="new-game-confirm" style="display: none; margin-top: 20px;">
+            <p id="confirm-message"></p>
+            <button onclick="respondToNewGame(true)" class="action-button success">Accept</button>
+            <button onclick="respondToNewGame(false)" class="action-button error">Decline</button>
+        </div>
+        <div id="chat-container" class="chat-container">
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type your message..." class="chat-input">
+                <button onclick="sendChatMessage()" class="chat-send-button">Send</button>
+            </div>
+        </div>  
+    </div>
+
+    <script>
+        console.log('Page loading...');
+    </script>
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        console.log('Socket.IO client loaded');
+    </script>
+    <script src="/client.js"></script>
+    <script>
+        console.log('All scripts loaded');
+    </script>
+</body>
+</html>
