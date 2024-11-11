@@ -58,7 +58,7 @@ io.on('connection', (socket) => {
         console.log(`Received ${currentResponses} out of ${requiredResponses} required responses`);
 
         if (currentResponses >= requiredResponses) {
-            // Check if all players accepted
+            // Check if all players accepted sadwadwadad
             const allAccepted = Array.from(responses.values()).every(response => response);
 
             if (allAccepted) {
