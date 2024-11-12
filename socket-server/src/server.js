@@ -127,16 +127,21 @@ io.on('connection', (socket) => {
                 playerId: socket.id,
                 letter
             });
-
+    
+            // Send game state update
             io.to(gameId).emit('gameStateUpdate', response.data.gameState);
-
-            if (response.data.result === 'win' || response.data.result === 'lose') {
+    
+            // Check if game is over
+            if (response.data.gameState.status === 'finished' || 
+                response.data.gameState.remainingGuesses <= 0) {
+                
                 const game = activeGames.get(gameId);
                 if (game) {
+                    console.log('Game Over detected, emitting to players');
                     game.players.forEach(player => {
                         io.to(player.id).emit('gameOver', {
-                            result: response.data.result,
-                            word: response.data.word,
+                            result: response.data.gameState.remainingGuesses <= 0 ? 'lose' : 'win',
+                            word: response.data.gameState.actualWord, // Use the actual word here
                             isHost: player.id === game.players[0].id
                         });
                     });
@@ -150,9 +155,7 @@ io.on('connection', (socket) => {
         }
     });
     
-    socket.on('disconnect', (reason) => {
-        console.log(`Client ${socket.id} disconnected. Reason: ${reason}`);
-    });
+   
     socket.on('joinGame', async ({ gameId, playerName }) => {
         console.log(`Join game request from ${playerName} for game ${gameId}`);
         try {

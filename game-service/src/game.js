@@ -7,6 +7,8 @@ class Game {
         this.currentPlayerIndex = 0;
         this.remainingGuesses = 8;
         this.status = 'waiting';
+        this.turnStartTime = Date.now();
+        this.scores = new Map(); // For storing player scores
     }
 
     getRandomWord() {
@@ -17,20 +19,22 @@ class Game {
         this.word = this.getRandomWord();
         this.guessedLetters = new Set();
         this.remainingGuesses = 8;
-        this.status = 'playing';
         this.currentPlayerIndex = 0;
-        return this.getGameState();
+        this.status = 'playing';
+        this.turnStartTime = Date.now();
+        // Note: We don't reset scores here to maintain them across rounds
     }
     addPlayer(playerId, playerName) {
-        // Changed to allow 3 players
         if (this.players.length < 3 && this.status === 'waiting') {
             if (this.players.some(p => p.name === playerName)) {
                 return { success: false, message: 'This name is already taken in this game' };
             }
             this.players.push({ id: playerId, name: playerName });
-            // Start game when 3 players join
+            this.scores.set(playerId, 0); // Initialize score for new player
+            
             if (this.players.length === 3) {
                 this.status = 'playing';
+                this.turnStartTime = Date.now();
             }
             return { success: true };
         }
@@ -59,41 +63,82 @@ class Game {
     }
 
     makeGuess(letter) {
-        if (!this.guessedLetters.has(letter)) {
-            this.guessedLetters.add(letter);
-            if (!this.word.includes(letter)) {
-                this.remainingGuesses--;
-            }
-            // Move to next player
-            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-            
-            if (this.isWordGuessed()) {
-                this.status = 'finished';
-                return 'win';
-            } else if (this.remainingGuesses <= 0) {
-                this.status = 'finished';
-                return 'lose';
-            }
-            return 'continue';
+        if (this.status !== 'playing') {
+            return { result: 'invalid', score: 0 };
         }
-        return 'invalid';
+    
+        if (this.guessedLetters.has(letter)) {
+            return { result: 'invalid', score: 0 };
+        }
+    
+        // Handle empty guess (timeout)
+        if (letter === '') {
+            // Just move to next player without any other changes
+            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+            this.turnStartTime = Date.now();
+            return { result: 'continue', score: 0 };
+        }
+    
+        const timeTaken = (Date.now() - this.turnStartTime) / 1000;
+        this.guessedLetters.add(letter);
+        let score = 0;
+    
+        const currentPlayer = this.getCurrentPlayer();
+        if (this.word.includes(letter)) {
+            if (timeTaken <= 5) {
+                score = 10;
+            } else if (timeTaken <= 10) {
+                score = 5;
+            }
+            this.scores.set(currentPlayer.id, (this.scores.get(currentPlayer.id) || 0) + score);
+        } else {
+            this.remainingGuesses--;
+        }
+    
+        // Move to next player and reset timer
+        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        this.turnStartTime = Date.now();
+    
+        if (this.isWordGuessed()) {
+            this.status = 'finished';
+            return { result: 'win', score, word: this.word };
+        } else if (this.remainingGuesses <= 0) {
+            this.status = 'finished';
+            return { result: 'lose', score, word: this.word };
+        }
+    
+        return { result: 'continue', score };
     }
 
     isWordGuessed() {
         return [...this.word].every(letter => this.guessedLetters.has(letter));
     }
 
+    getCurrentPlayer() {
+        return this.players[this.currentPlayerIndex];
+    }
+
     getGameState() {
+        // Sort players by score
+        const sortedPlayers = this.players.map(player => ({
+            ...player,
+            score: this.scores.get(player.id) || 0
+        })).sort((a, b) => b.score - a.score);
+    
         return {
-            word: [...this.word].map(letter => 
-                this.guessedLetters.has(letter) ? letter : '_'
-            ).join(''),
+            word: this.status === 'finished' ? 
+                this.word : // Show full word if game is finished
+                [...this.word].map(letter => 
+                    this.guessedLetters.has(letter) ? letter : '_'
+                ).join(''),
             guessedLetters: Array.from(this.guessedLetters),
             remainingGuesses: this.remainingGuesses,
             currentPlayer: this.getCurrentPlayer(),
             status: this.status,
-            players: this.players,
-            playersNeeded: 3 - this.players.length // New field to show how many players are still needed
+            players: sortedPlayers,
+            timeRemaining: 10,
+            playersNeeded: 3 - this.players.length,
+            actualWord: this.word // Always include the actual word
         };
     }
 }
