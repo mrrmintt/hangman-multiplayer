@@ -1,0 +1,3 @@
+build: docker build -t hangman-multiplayer .   
+
+container start: docker run -p 3000:3000 hangman-multiplayer
