@@ -114,9 +114,7 @@ class Game {
         return [...this.word].every(letter => this.guessedLetters.has(letter));
     }
 
-    getCurrentPlayer() {
-        return this.players[this.currentPlayerIndex];
-    }
+    
 
     getGameState() {
         // Sort players by score
