@@ -1,13 +1,31 @@
 const express = require('express');
 const cors = require('cors');
-const Game = require('./game');  // Make sure this path is correct!
+const Game = require('./game');  
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
 
 const games = new Map();
 const gameManagers = new Map();
+
+// Helper function to save game scores
+async function saveGameScores(gameId, players) {
+    try {
+        console.log('Attempting to save scores for game:', gameId);
+        console.log('Players:', players);
+        
+        for (const player of players) {
+            console.log(`Saving score for player ${player.name}: ${player.score || 0}`);
+            await createGameRecord(gameId, player.name, player.score || 0);
+            console.log(`Successfully saved score for ${player.name}`);
+        }
+        console.log('All scores saved successfully');
+    } catch (error) {
+        console.error('Error saving game scores:', error);
+    }
+}
 
 app.post('/games', (req, res) => {
     try {
@@ -23,7 +41,7 @@ app.post('/games', (req, res) => {
     }
 });
 
-app.post('/games/:gameId/players', (req, res) => {
+app.post('/games/:gameId/players', async (req, res) => {
     try {
         const { gameId } = req.params;
         const { playerId, playerName } = req.body;
@@ -41,7 +59,13 @@ app.post('/games/:gameId/players', (req, res) => {
         const result = game.addPlayer(playerId, playerName);
         if (result.success) {
             console.log(`Successfully added player ${playerName}`);
-            // Include game state in the response
+            
+            // If this is the third player, save initial scores
+            if (game.players.length === 3) {
+                console.log('Third player joined, saving initial scores');
+                await saveGameScores(gameId, game.players);
+            }
+
             res.json({
                 success: true,
                 gameState: game.getGameState()
@@ -61,6 +85,7 @@ app.post('/games/:gameId/players', (req, res) => {
         });
     }
 });
+
 app.post('/games/:gameId/reset', (req, res) => {
     try {
         const { gameId } = req.params;
@@ -84,7 +109,8 @@ app.post('/games/:gameId/reset', (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
-app.post('/games/:gameId/guess', (req, res) => {
+
+app.post('/games/:gameId/guess', async (req, res) => {
     try {
         const { gameId } = req.params;
         const { playerId, letter } = req.body;
@@ -111,14 +137,17 @@ app.post('/games/:gameId/guess', (req, res) => {
         const result = game.makeGuess(letter);
         const gameState = game.getGameState();
 
-        // Handle game over states properly
+        // Handle game over states and save final scores
         if (result === 'win' || result === 'lose') {
+            console.log('Game over, saving final scores');
+            await saveGameScores(gameId, gameState.players);
+            
             return res.json({
                 success: true,
                 result,
                 gameState,
                 isGameOver: true,
-                word: game.word  // Send the full word when game is over
+                word: game.word
             });
         }
 
@@ -136,6 +165,31 @@ app.post('/games/:gameId/guess', (req, res) => {
             success: false, 
             message: error.message 
         });
+    }
+});
+
+// New endpoint to get game scores
+app.get('/games/:gameId/scores', async (req, res) => {
+    try {
+        const { gameId } = req.params;
+        const game = games.get(gameId);
+        
+        if (!game) {
+            return res.status(404).json({ error: 'Game not found' });
+        }
+
+        const scores = [];
+        for (const player of game.players) {
+            const record = await getGameRecord(gameId, player.name);
+            if (record) {
+                scores.push(record);
+            }
+        }
+
+        res.json(scores);
+    } catch (error) {
+        console.error('Error getting game scores:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
