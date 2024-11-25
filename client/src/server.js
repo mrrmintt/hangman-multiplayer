@@ -1,8 +1,9 @@
 const express = require('express');
 const path = require('path');
-
 const app = express();
-app.use(express.static('public'));
+
+// Statische Dateien aus dem public Ordner servieren
+app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));

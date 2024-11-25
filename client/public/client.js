@@ -25,8 +25,8 @@ let playerName = '';
 let currentGameId = '';
 let turnTimer = null;  
 let timeLeft = 10;     
-let gameStarted = false; // Add this to track game start
-// Initialize game UI
+let gameStarted = false;
+
 function initializeGame() {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const lettersDiv = document.getElementById('letters');
@@ -96,7 +96,8 @@ function startTurnTimer() {
 
 function createGame() {
     console.log('Create game clicked');
-    playerName = document.getElementById('player-name').value.trim();
+    const playerNameInput = document.getElementById('player-name');
+    playerName = playerNameInput.value.trim();
     if (!playerName) {
         showStatus('Please enter your name', 'error');
         return;
