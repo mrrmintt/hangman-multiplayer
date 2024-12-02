@@ -1,10 +1,21 @@
 console.log('Client script loading...');
 
-const socket = io('http://localhost:3000', {
-    transports: ['websocket'],
+const socket = io({
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: 5,
-    reconnectionDelay: 1000
+    reconnectionDelay: 1000,
+    secure: false
+});
+
+// Debug-Logs hinzufügen
+socket.on('connect', () => {
+    console.log('Connected to socket server with ID:', socket.id);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Socket connection error:', error);
 });
 
 console.log('Socket initialized');
@@ -97,12 +108,23 @@ function startTurnTimer() {
 function createGame() {
     console.log('Create game clicked');
     const playerNameInput = document.getElementById('player-name');
+    if (!playerNameInput) {
+        console.error('Player name input not found');
+        return;
+    }
+    
     playerName = playerNameInput.value.trim();
+    console.log('Player name:', playerName);
+    
     if (!playerName) {
         showStatus('Please enter your name', 'error');
         return;
     }
-    resetChat(); // Reset chat when creating new game
+    
+    // Debug-Log hinzufügen
+    console.log('Emitting createGame event with:', { playerName });
+    
+    resetChat();
     socket.emit('createGame', { playerName });
 }
 

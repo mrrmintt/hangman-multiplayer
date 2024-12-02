@@ -2,8 +2,14 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-// Statische Dateien aus dem public Ordner servieren
-app.use(express.static(path.join(__dirname, '../public')));
+// MIME-Type für CSS explizit setzen
+app.use(express.static('public', {
+    setHeaders: (res, path, stat) => {
+        if (path.endsWith('.css')) {
+            res.set('Content-Type', 'text/css');
+        }
+    }
+}));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));

@@ -5,15 +5,39 @@ const newGameResponses = new Map();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
     cors: {
-        origin: "http://localhost:80",
+        origin: "*",
         methods: ["GET", "POST"],
+        allowedHeaders: ["*"],
         credentials: true,
         transports: ['websocket', 'polling']
-    }
+    },
+    allowEIO3: true
 });
 console.log('Socket server initializing...');
 
+app.get('/health', (req, res) => {
+    try {
+        
+        const healthStatus = {
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            service: 'socket-server',
+            connectedClients: io.engine.clientsCount || 0,
+            uptime: Math.round(process.uptime()) + ' seconds'
+        };
+        res.status(200).json(healthStatus);
+    } catch (error) {
+        res.status(503).json({
+            status: 'unhealthy',
+            error: error.message
+        });
+    }
+});
+
+
 const axios = require('axios');
+const GAME_SERVICE_URL = process.env.GAME_SERVICE_URL || 'http://localhost:3001';
+const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:3002';
 const activeGames = new Map();
 app.use(cors({
     origin: "http://localhost:80",
@@ -66,8 +90,8 @@ io.on('connection', (socket) => {
                 try {
                     // Reset both game and chat in parallel
                     const [gameResponse, chatResponse] = await Promise.all([
-                        axios.post(`http://localhost:3001/games/${gameId}/reset`),
-                        axios.post(`http://localhost:3002/chats/${gameId}/reset`)
+                        axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`),
+                        axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`)
                     ]);
 
                     console.log('Game and chat reset successfully');
@@ -106,7 +130,7 @@ io.on('connection', (socket) => {
     socket.on('chatMessage', async ({ gameId, message, playerName }) => {
         console.log(`Chat message from ${playerName} in game ${gameId}: ${message}`);
         try {
-            const response = await axios.post(`http://localhost:3002/chats/${gameId}/messages`, {
+            const response = await axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/messages`, {
                 username: playerName,
                 message: message
             });
@@ -123,7 +147,7 @@ io.on('connection', (socket) => {
     socket.on('makeGuess', async ({ gameId, letter }) => {
         console.log(`Guess attempt from ${socket.id}: Letter ${letter} in game ${gameId}`);
         try {
-            const response = await axios.post(`http://localhost:3001/games/${gameId}/guess`, {
+            const response = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/guess`, {
                 playerId: socket.id,
                 letter
             });
@@ -160,18 +184,18 @@ io.on('connection', (socket) => {
         console.log(`Join game request from ${playerName} for game ${gameId}`);
         try {
             // Add player to game
-            const response = await axios.post(`http://localhost:3001/games/${gameId}/players`, {
+            const response = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/players`, {
                 playerId: socket.id,
                 playerName
             });
-
+            
             if (response.data.success) {
                 // Update local game info
                 const game = activeGames.get(gameId);
                 if (game) {
                     game.players.push({id: socket.id, name: playerName});
                 }
-
+    
                 socket.join(gameId);
                 io.to(gameId).emit('playerJoined', {
                     message: `${playerName} joined the game!`,
@@ -189,7 +213,7 @@ io.on('connection', (socket) => {
         try {
             // Create game via Game Service
             console.log('Attempting to create game on game service...');
-            const gameResponse = await axios.post('http://localhost:3001/games');
+            const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games`);
             const gameId = gameResponse.data.gameId;
             console.log('Game created with ID:', gameId);
             
@@ -201,11 +225,11 @@ io.on('connection', (socket) => {
             
             // Create chat for this game
             console.log('Creating chat for game...');
-            await axios.post('http://localhost:3002/chats', { gameId });
+            await axios.post(`${CHAT_SERVICE_URL}/chats`, { gameId });
             
             // Add player to game
             console.log('Adding player to game...');
-            await axios.post(`http://localhost:3001/games/${gameId}/players`, {
+            await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/players`, {
                 playerId: socket.id,
                 playerName
             });

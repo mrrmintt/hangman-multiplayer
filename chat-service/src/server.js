@@ -9,6 +9,25 @@ app.use(express.json());
 // Store chats in memory
 const chats = new Map();
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    try {
+        
+        const healthStatus = {
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            service: 'chat-service',
+            activeChats: chats.size,
+            uptime: Math.round(process.uptime()) + ' seconds'
+        };
+        res.status(200).json(healthStatus);
+    } catch (error) {
+        res.status(503).json({
+            status: 'unhealthy',
+            error: error.message
+        });
+    }
+});
 app.post('/chats', (req, res) => {
     console.log('New chat request received');
     try {

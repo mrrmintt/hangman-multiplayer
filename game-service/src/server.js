@@ -9,7 +9,24 @@ app.use(express.json());
 
 const games = new Map();
 const gameManagers = new Map();
-
+app.get('/health', (req, res) => {
+    try {
+        
+        const healthStatus = {
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            service: 'game-service',
+            activeGames: games.size,
+            uptime: Math.round(process.uptime()) + ' seconds'
+        };
+        res.status(200).json(healthStatus);
+    } catch (error) {
+        res.status(503).json({
+            status: 'unhealthy',
+            error: error.message
+        });
+    }
+});
 // Helper function to save game scores
 async function saveGameScores(gameId, players) {
     try {
