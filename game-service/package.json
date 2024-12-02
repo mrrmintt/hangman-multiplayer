@@ -1,0 +1,8 @@
+{
+  "name": "hangman-game-service",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "cors": "^2.8.5"
+  }
+}
