@@ -237,6 +237,7 @@ socket.on('gameStateUpdate', (gameState) => {
     console.log('Game state update:', gameState);
     updateGameState(gameState);
 });
+
 socket.on('playerJoined', ({ message, gameState }) => {
     console.log('Player joined:', message); // Debug log
     showStatus(message, 'success');

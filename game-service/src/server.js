@@ -3,6 +3,8 @@ const cors = require('cors');
 const Game = require('./game');  
 const app = express();
 
+const axios = require('axios');
+const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'http://db-service:3003';
 
 app.use(cors());
 app.use(express.json());
@@ -27,21 +29,27 @@ app.get('/health', (req, res) => {
         });
     }
 });
+async function saveScore(gameId, playerName, score) {
+    try {
+        await axios.post(`${DB_SERVICE_URL}/scores`, {
+            gameId,
+            playerName,
+            score
+        });
+    } catch (error) {
+        console.error('Error saving score:', error);
+    }
+}
 // Helper function to save game scores
 async function saveGameScores(gameId, players) {
     try {
-        console.log('Attempting to save scores for game:', gameId);
-        console.log('Players:', players);
-        
         for (const player of players) {
-            console.log(`Saving score for player ${player.name}: ${player.score || 0}`);
-            await createGameRecord(gameId, player.name, player.score || 0);
-            console.log(`Successfully saved score for ${player.name}`);
+            await saveScore(gameId, player.name, player.score || 0);
         }
-        console.log('All scores saved successfully');
     } catch (error) {
         console.error('Error saving game scores:', error);
     }
+
 }
 
 app.post('/games', (req, res) => {
@@ -153,7 +161,13 @@ app.post('/games/:gameId/guess', async (req, res) => {
         // Make the guess
         const result = game.makeGuess(letter);
         const gameState = game.getGameState();
-
+        if (result.score > 0) {
+            await axios.post(`${DB_SERVICE_URL}/scores`, {
+                gameId,
+                playerName: currentPlayer.name,
+                score: result.score
+            });
+        }
         // Handle game over states and save final scores
         if (result === 'win' || result === 'lose') {
             console.log('Game over, saving final scores');
@@ -189,21 +203,8 @@ app.post('/games/:gameId/guess', async (req, res) => {
 app.get('/games/:gameId/scores', async (req, res) => {
     try {
         const { gameId } = req.params;
-        const game = games.get(gameId);
-        
-        if (!game) {
-            return res.status(404).json({ error: 'Game not found' });
-        }
-
-        const scores = [];
-        for (const player of game.players) {
-            const record = await getGameRecord(gameId, player.name);
-            if (record) {
-                scores.push(record);
-            }
-        }
-
-        res.json(scores);
+        const response = await axios.get(`${DB_SERVICE_URL}/scores/${gameId}`);
+        res.json(response.data);
     } catch (error) {
         console.error('Error getting game scores:', error);
         res.status(500).json({ error: error.message });
