@@ -53,5 +53,22 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
+// Get winners of the day
+router.get('/daily-winners', async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const winners = await Score.find({
+            playDate: { $gte: today },
+            isWinner: true
+        })
+        .sort('-score')
+        .limit(10);
+        
+        res.json(winners);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 module.exports = router;

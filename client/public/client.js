@@ -8,7 +8,80 @@ const socket = io({
     reconnectionDelay: 1000,
     secure: false
 });
+const HANGMAN_STATES = [
+    // 0 Fehler
+    `
+     +---+
+     |   |
+         |
+         |
+         |
+         |
+    ==========`,
+    // 1 Fehler
+    `
+     +---+
+     |   |
+     O   |
+         |
+         |
+         |
+    ==========`,
+    // 2 Fehler
+    `
+     +---+
+     |   |
+     O   |
+     |   |
+         |
+         |
+    ==========`,
+    // 3 Fehler
+    `
+     +---+
+     |   |
+     O   |
+    /|   |
+         |
+         |
+    ==========`,
+    // 4 Fehler
+    `
+     +---+
+     |   |
+     O   |
+    /|\\  |
+         |
+         |
+    ==========`,
+    // 5 Fehler
+    `
+     +---+
+     |   |
+     O   |
+    /|\\  |
+    /    |
+         |
+    ==========`,
+    // 6 Fehler - Game Over
+    `
+     +---+
+     |   |
+     O   |
+    /|\\  |
+    / \\  |
+         |
+    ==========`
+];
 
+function updateHangman(remainingGuesses) {
+    const maxGuesses = 8;
+    const stateIndex = Math.min(
+        HANGMAN_STATES.length - 1, 
+        Math.floor((maxGuesses - remainingGuesses) * (HANGMAN_STATES.length / maxGuesses))
+    );
+    document.getElementById('hangman-drawing').innerHTML = HANGMAN_STATES[stateIndex];
+}
 // Debug-Logs hinzufügen
 socket.on('connect', () => {
     console.log('Connected to socket server with ID:', socket.id);
@@ -345,7 +418,8 @@ function hideNewGameElements() {
 function updateGameState(gameState) {
     document.getElementById('word').textContent = gameState.word;
     document.getElementById('guesses').textContent = gameState.remainingGuesses;
-    
+    updateHangman(gameState.remainingGuesses);
+
     // Update players list with scores
     const playersContainer = document.getElementById('players-container');
     playersContainer.innerHTML = '';
@@ -412,4 +486,29 @@ document.getElementById('chat-input').addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
         sendChatMessage();
     }
+});
+// Funktion zum Laden der Tagesgewinner
+async function loadDailyWinners() {
+    try {
+        const response = await fetch('/db/daily-winners');
+        const winners = await response.json();
+        
+        const winnersDiv = document.getElementById('daily-winners');
+        winnersDiv.innerHTML = winners.map(winner => `
+            <div class="winner-item">
+                <span class="winner-name">${winner.playerName}</span>
+                <span class="winner-score">${winner.score} points</span>
+                <span class="winner-time">${new Date(winner.playDate).toLocaleTimeString()}</span>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading winners:', error);
+    }
+}
+
+// Beim Laden der Seite ausführen
+document.addEventListener('DOMContentLoaded', () => {
+    loadDailyWinners();
+    // Alle 30 Sekunden aktualisieren
+    setInterval(loadDailyWinners, 30000);
 });
