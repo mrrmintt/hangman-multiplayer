@@ -43,7 +43,7 @@ class NewGameManager {
 
             if (allAccepted) {
                 // Reset game state
-                this.game.word = this.game.getRandomWord();
+                this.game.word = this.game.initializeWord();
                 this.game.guessedLetters = new Set();
                 this.game.remainingGuesses = 8;
                 this.game.status = 'playing';

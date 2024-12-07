@@ -2,7 +2,7 @@ class Game {
     constructor(id) {
         this.id = id;
         this.players = [];
-        this.word = this.getRandomWord();
+        this.word = this.initializeWord();
         this.guessedLetters = new Set();
         this.currentPlayerIndex = 0;
         this.remainingGuesses = 8;
@@ -11,12 +11,38 @@ class Game {
         this.scores = new Map(); // For storing player scores
     }
 
-    getRandomWord() {
-        const words = ['JAVASCRIPT', 'NODEJS', 'EXPRESS', 'SOCKET', 'PROGRAMMING'];
-        return words[Math.floor(Math.random() * words.length)];
+    
+    async initializeWord() {
+        const word = await this.generateRandomWord();
+        if (word && word !== 'default') {
+            this.word = word;
+        } else {
+            throw new Error('Wort konnte nicht abgerufen werden');
+        }
     }
-    resetGame() {
-        this.word = this.getRandomWord();
+
+    
+ generateRandomWord = async() => {
+    try {
+        const response = await fetch('https://random-word-api.herokuapp.com/word?lang=de'); // Hol dir ein zufälliges Wort
+        const data = await response.json(); // Antworte mit JSON
+
+        if (!response.ok || !data || data.length === 0) {
+            throw new Error('Kein Wort von der API erhalten');
+        }
+
+        const randomWord = data[0]; // Das zufällige Wort
+
+        console.log('Zufälliges Wort:', randomWord);
+        return randomWord;
+    } catch (error) {
+        console.error('Fehler beim Abrufen des zufälligen Wortes:', error);
+        return 'default';  // Standardwort, falls Fehler auftreten
+    }
+    };
+
+    resetGame = async () =>{
+        this.word = await this.initializeWord();
         this.guessedLetters = new Set();
         this.remainingGuesses = 8;
         this.currentPlayerIndex = 0;
@@ -115,18 +141,20 @@ class Game {
     }
 
     
-
     getGameState() {
-        // Sort players by score
+        // Sortiere die Spieler nach der Punktzahl
         const sortedPlayers = this.players.map(player => ({
             ...player,
             score: this.scores.get(player.id) || 0
         })).sort((a, b) => b.score - a.score);
     
+        // Stelle sicher, dass `this.word` ein String ist
+        const word = typeof this.word === 'string' ? this.word : ''; // Falls `this.word` nicht gesetzt ist, wird ein leerer String verwendet.
+    
         return {
             word: this.status === 'finished' ? 
-                this.word : // Show full word if game is finished
-                [...this.word].map(letter => 
+                word : // Zeige das vollständige Wort, wenn das Spiel beendet ist
+                [...word].map(letter => 
                     this.guessedLetters.has(letter) ? letter : '_'
                 ).join(''),
             guessedLetters: Array.from(this.guessedLetters),
@@ -136,9 +164,10 @@ class Game {
             players: sortedPlayers,
             timeRemaining: 10,
             playersNeeded: 3 - this.players.length,
-            actualWord: this.word // Always include the actual word
+            actualWord: word // Zeige immer das tatsächliche Wort
         };
     }
+    
 }
 
 module.exports = Game;
