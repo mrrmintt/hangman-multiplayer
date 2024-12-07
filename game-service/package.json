@@ -2,15 +2,8 @@
   "name": "hangman-game-service",
   "version": "1.0.0",
   "dependencies": {
-<<<<<<< HEAD
-    "express": "^4.17.1",
-    "cors": "^2.8.5"
-  }
-}
-=======
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   }
 }
->>>>>>> 503a8211a8b47c19f57058b1dcb7bc893c7cca24
