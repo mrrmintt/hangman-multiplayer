@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
         <link rel="stylesheet" type="text/css" href="/style.css">
         <title>Multiplayer Hangman</title>
         <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
@@ -15,6 +16,10 @@
                 <input type="text" id="game-id" placeholder="Enter game ID">
                 <button onclick="joinGame()">Join Game</button>
             </div>
+        </div>
+        <div class="winners-list">
+            <h2>Today's Winners</h2>
+            <div id="daily-winners"></div>
         </div>
     </div>
 
@@ -36,7 +41,9 @@
         <h2>Game ID: <span id="current-game-id"></span></h2>
         <p>Remaining guesses: <span id="guesses"></span></p>
         
+        <div class="hangman-drawing" id="hangman-drawing"></div>
         <div class="word" id="word"></div>
+
         <div class="letters" id="letters"></div>
         <div id="status"></div>
         
