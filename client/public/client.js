@@ -237,6 +237,10 @@ socket.on('gameStateUpdate', (gameState) => {
     console.log('Game state update:', gameState);
     updateGameState(gameState);
 });
+<<<<<<< HEAD
+=======
+
+>>>>>>> 503a8211a8b47c19f57058b1dcb7bc893c7cca24
 socket.on('playerJoined', ({ message, gameState }) => {
     console.log('Player joined:', message); // Debug log
     showStatus(message, 'success');
