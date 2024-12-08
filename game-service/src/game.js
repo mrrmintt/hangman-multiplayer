@@ -29,8 +29,11 @@ class Game {
             if (this.players.some(p => p.name === playerName)) {
                 return { success: false, message: 'This name is already taken in this game' };
             }
-            this.players.push({ id: playerId, name: playerName });
-            this.scores.set(playerId, 0); // Initialize score for new player
+            this.players.push({ 
+                id: playerId, 
+                name: playerName   // Stelle sicher, dass der Name hier korrekt gesetzt wird
+            });
+            this.scores.set(playerId, 0);
             
             if (this.players.length === 3) {
                 this.status = 'playing';
@@ -40,6 +43,8 @@ class Game {
         }
         return { success: false, message: 'Game is full or already in progress' };
     }
+    
+    
 
     removePlayer(playerId) {
         const index = this.players.findIndex(p => p.id === playerId);
@@ -73,7 +78,6 @@ class Game {
     
         // Handle empty guess (timeout)
         if (letter === '') {
-            // Just move to next player without any other changes
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
             this.turnStartTime = Date.now();
             return { result: 'continue', score: 0 };
@@ -95,7 +99,6 @@ class Game {
             this.remainingGuesses--;
         }
     
-        // Move to next player and reset timer
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.turnStartTime = Date.now();
     

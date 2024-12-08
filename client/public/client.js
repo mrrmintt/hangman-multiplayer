@@ -490,10 +490,19 @@ document.getElementById('chat-input').addEventListener('keypress', (event) => {
 // Funktion zum Laden der Tagesgewinner
 async function loadDailyWinners() {
     try {
-        const response = await fetch('/db/daily-winners');
+        console.log('Fetching daily winners...');
+
+        const response = await fetch('/db/scores/daily-winners');
         const winners = await response.json();
         
+        console.log('Received winners:', winners);
+
         const winnersDiv = document.getElementById('daily-winners');
+        if (!winners || winners.length === 0) {
+            winnersDiv.innerHTML = '<div class="no-winners">No games played today yet!</div>';
+            return;
+        }
+        
         winnersDiv.innerHTML = winners.map(winner => `
             <div class="winner-item">
                 <span class="winner-name">${winner.playerName}</span>
@@ -503,8 +512,16 @@ async function loadDailyWinners() {
         `).join('');
     } catch (error) {
         console.error('Error loading winners:', error);
+        const winnersDiv = document.getElementById('daily-winners');
+        winnersDiv.innerHTML = '<div class="error">Error loading winners</div>';
     }
 }
+
+// Nur EINMAL registrieren
+document.addEventListener('DOMContentLoaded', () => {
+    loadDailyWinners();
+    setInterval(loadDailyWinners, 30000);
+});
 
 // Beim Laden der Seite ausführen
 document.addEventListener('DOMContentLoaded', () => {

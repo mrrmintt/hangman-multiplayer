@@ -111,7 +111,7 @@ io.on('connection', (socket) => {
                 console.log('Some players declined, returning to menu');
                 try {
                     // Reset chat when returning to menu
-                    await axios.post(`http://localhost:3002/chats/${gameId}/reset`);
+                    await axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`);
                     io.to(gameId).emit('returnToMenu', {
                         message: 'New game rejected. Returning to menu...'
                     });

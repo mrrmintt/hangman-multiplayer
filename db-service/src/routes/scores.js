@@ -1,7 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const Score = require('../models/score');
-
+router.get('/daily-winners', async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Debug logs hinzufügen
+        console.log('Searching for winners since:', today);
+        
+        const winners = await Score.find({
+            playDate: { $gte: today },
+            isWinner: true
+        })
+        .sort('-score')
+        .limit(10);
+        
+        console.log('Found winners:', winners);
+        
+        res.json(winners);
+    } catch (error) {
+        console.error('Error getting daily winners:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 // Get all scores
 router.get('/', async (req, res) => {
     try {
@@ -25,21 +47,27 @@ router.get('/:gameId', async (req, res) => {
 // Save new score
 router.post('/', async (req, res) => {
     try {
-        const { gameId, playerName, score } = req.body;
+        console.log('Received score data:', req.body); // Debug log
         
-        // Finde existierenden Score und update ihn
-        const existingScore = await Score.findOne({ gameId, playerName });
-        if (existingScore) {
-            existingScore.score += score;  // Score addieren
-            await existingScore.save();
-            res.json(existingScore);
-        } else {
-            // Neuen Score erstellen
-            const newScore = new Score({ gameId, playerName, score });
-            await newScore.save();
-            res.json(newScore);
-        }
+        const { gameId, playerName, score, playDate, isWinner } = req.body;
+        
+        const scoreData = {
+            gameId,
+            playerName,
+            score: score || 0,
+            playDate: playDate || new Date(),
+            isWinner: isWinner || false
+        };
+
+        console.log('Creating score with data:', scoreData); // Debug log
+
+        const newScore = new Score(scoreData);
+        await newScore.save();
+        
+        console.log('Score saved:', newScore); // Debug log
+        res.json(newScore);
     } catch (error) {
+        console.error('Error saving score:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -54,21 +82,5 @@ router.delete('/:id', async (req, res) => {
     }
 });
 // Get winners of the day
-router.get('/daily-winners', async (req, res) => {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const winners = await Score.find({
-            playDate: { $gte: today },
-            isWinner: true
-        })
-        .sort('-score')
-        .limit(10);
-        
-        res.json(winners);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+
 module.exports = router;

@@ -163,17 +163,20 @@ app.post('/games/:gameId/guess', async (req, res) => {
         const gameState = game.getGameState();
 
         // Speichere Punkte für erfolgreichen Versuch
+        // Entferne oder ändere diesen Teil:
         if (result.score > 0) {
             await axios.post(`${DB_SERVICE_URL}/scores`, {
                 gameId,
                 playerName: currentPlayer.name,
                 score: result.score,
-                playDate: new Date()
+                playDate: new Date(),
+                isWinner: false  // Normale Punkte sind keine Gewinner
             });
         }
 
+        
         // Handle game over states and save final scores
-        if (result === 'win' || result === 'lose') {
+        if (result.result === 'win' || result.result === 'lose') {
             console.log('Game over, saving final scores');
             const sortedPlayers = gameState.players.sort((a, b) => 
                 (b.score || 0) - (a.score || 0)
@@ -181,33 +184,35 @@ app.post('/games/:gameId/guess', async (req, res) => {
             
             // Speichere Gewinner
             if (sortedPlayers.length > 0) {
-                await axios.post(`${DB_SERVICE_URL}/scores`, {
+                const winnerData = {
                     gameId,
                     playerName: sortedPlayers[0].name,
                     score: sortedPlayers[0].score || 0,
                     playDate: new Date(),
                     isWinner: true
-                });
+                };
+                console.log('Saving winner data:', winnerData);
+                
+                try {
+                    const response = await axios.post(`${DB_SERVICE_URL}/scores`, winnerData);
+                    console.log('Winner saved:', response.data);
+                } catch (error) {
+                    console.error('Error saving winner:', error);
+                }
             }
-
-            await saveGameScores(gameId, gameState.players);
             
-            // Sende Gewinner-Info zurück
             return res.json({
                 success: true,
-                result,
+                result: result.result,
                 gameState,
                 isGameOver: true,
                 word: game.word,
                 winner: sortedPlayers[0],
-                finalScores: sortedPlayers.map(p => ({
-                    name: p.name,
-                    score: p.score || 0
-                }))
+                finalScores: sortedPlayers
             });
         }
 
-        // Normal turn response
+        
         res.json({
             success: true,
             result,

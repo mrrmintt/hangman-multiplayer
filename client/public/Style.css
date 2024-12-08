@@ -215,38 +215,32 @@ button:hover {
     }
 }
 /*responsive */
-.winners-list {
-    margin-top: 30px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-}
-
-.winners-list h2 {
-    color: var(--primary-color);
-    text-align: center;
-    margin-bottom: 15px;
-}
-
 .winner-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 10px;
     margin: 5px 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 8px;
 }
 
 .winner-name {
-    color: #fff;
     font-weight: bold;
+    color: #00ff88;
 }
 
 .winner-score {
-    color: var(--primary-color);
+    color: #ffffff;
 }
 
 .winner-time {
-    color: #888;
-    font-size: 0.9em;
+    color: #aaaaaa;
+    font-size: 0.8em;
+}
+
+.no-winners {
+    text-align: center;
+    color: #aaaaaa;
+    padding: 20px;
 }
