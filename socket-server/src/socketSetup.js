@@ -5,6 +5,8 @@ const {
     handleJoinGame 
 } = require('./socketHandlers');
 
+
+//Hier noch was machen????
 function setupSocketIO(server) {
     const io = socketIO(server, {
         cors: {

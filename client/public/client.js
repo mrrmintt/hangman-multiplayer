@@ -214,6 +214,20 @@ function joinGame() {
     socket.emit('joinGame', { gameId, playerName });
 }
 
+// Function to join a public game when button is clicked
+function joinPublicGame() {
+    console.log('Join Public game clicked');
+    playerName = document.getElementById('player-name').value.trim();
+    //const gameId = document.getElementById('game-id').value.trim();
+    if (!playerName ) {
+        showStatus('Please enter your name ', 'error');
+        return;
+    }
+    resetChat(); // Reset chat when joining game
+    //currentGameId = gameId;
+    socket.emit('joinPublicGame', { playerName });
+}
+
 function makeGuess(letter) {
     if (!currentGameId) return;
     
