@@ -118,6 +118,63 @@ services:
       retries: 3
       start_period: 40s
 
+  public-game-service:
+    build: ./public-game
+    expose:
+      - "3005"
+    environment:
+      - NODE_ENV=development
+      - DB_SERVICE_URL=http://db-service:3003
+    networks:
+      - hangman-network
+    volumes:
+      - ./public-game:/usr/src/app
+      - /usr/src/app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "./healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  public-game-service-2:
+    build: ./public-game
+    expose:
+      - "3005"
+    environment:
+      - NODE_ENV=development
+      - DB_SERVICE_URL=http://db-service:3003
+    networks:
+      - hangman-network
+    volumes:
+      - ./public-game:/usr/src/app
+      - /usr/src/app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "./healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  public-game-service-3:
+    build: ./public-game
+    expose:
+      - "3005"
+    environment:
+      - NODE_ENV=development
+      - DB_SERVICE_URL=http://db-service:3003
+    networks:
+      - hangman-network
+    volumes:
+      - ./public-game:/usr/src/app
+      - /usr/src/app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "./healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   chat-service:
     build: ./chat-service
     expose:

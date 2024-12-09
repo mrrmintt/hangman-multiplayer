@@ -38,6 +38,9 @@ app.get('/health', (req, res) => {
 const axios = require('axios');
 const GAME_SERVICE_URL = process.env.GAME_SERVICE_URL || 'http://localhost:3001';
 const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:3002';
+
+//Hier noch was machen???
+const PUBLIC_GAME_URL = process.env.PUBLIC_GAME_URL || 'http://localhost:3005';
 const activeGames = new Map();
 app.use(cors({
     origin: "http://localhost:80",
@@ -209,71 +212,54 @@ io.on('connection', (socket) => {
         }
     });
 
+
+
+
     // Socket for join public game
-    socket.on('joinPublicGame', async ({ gameId, playerName }) => {
-        console.log(`Join game request from ${playerName} for game a public game`);
+    socket.on('joinPublicGame', async ({ playerName }) => {
+        console.log(`Join public game request from ${playerName}`);
+        
         try {
-
-            // Get to check if there are games and to check if full
-            let public_games = await axios.get(`${GAME_SERVICE_URL}/public_games`)
-
-            //create public game if there are none
-            if (public_games.length== 0){
-                await axios.post(`${GAME_SERVICE_URL}/public_games`)
-                const gameId = gameResponse.data.gameId;
-                console.log('Public Game created with ID:', gameId);
+            const publicGameId = await axios.get(`${PUBLIC_GAME_URL}/public_games`)
+                .then(response => {
+                    const games = response.data;
+                    let game = games.find(game => game.players.length < 5);
+    
+                    if (!game) {
+                        return axios.post(`${PUBLIC_GAME_URL}/public_games`)
+                            .then(createResponse => createResponse.data.gameId);
+                    }
+                    
+                    return game.id;
+                });
+    
+            if (!publicGameId) {
+                throw new Error('No available public game found or created');
             }
-
-            // Now there should defenetly be a public game
-            public_games = await axios.get('/public_games')
-
-            //Nicht schön!
-            let public_game_id = 0;
-
-            for (let i = 0; i < public_games.length; i++) {
-                if (public_games[i].players.length < 5) {
-                    public_game_id = public_games[i].id;
-                    break; // Schleife abbrechen, wenn ein Spiel gefunden wurde
-                }
-            }
-
-            if (public_game_id === 0) {
-                // Kein Spiel gefunden, neues Spiel erstellen
-                try {
-                    const gameResponse = await axios.post(`${GAME_SERVICE_URL}/public_games`);
-                    public_game_id = gameResponse.data.gameId;
-                    console.log('Public Game created with ID:', public_game_id);
-                } catch (error) {
-                    console.error('Error creating a new public game:', error);
-                }
-            }
-
-            console.log("Public Game id: "+ public_game_id)
-            // Add player to game
-            const response = await axios.post(`${GAME_SERVICE_URL}/public_games/${public_game_id}/players`, {
+    
+            const response = await axios.post(`${PUBLIC_GAME_URL}/public_games/${publicGameId}/players`, {
                 playerId: socket.id,
                 playerName
             });
-            
-            if (response.data.success) {
-                // Update local game info
-                const game = activeGames.get(public_game_id);
-                if (game) {
-                    game.players.push({id: socket.id, name: playerName});
-                }
     
-                socket.join(public_game_id);
-                io.to(public_game_id).emit('playerJoined', {
-                    message: `${playerName} joined the game!`,
+            if (response.data.success) {
+                socket.join(publicGameId);
+                io.to(publicGameId).emit('playerJoined', {
+                    message: `${playerName} joined the public game!`,
                     gameState: response.data.gameState
                 });
             }
         } catch (error) {
+            console.error('Error in joinPublicGame:', error);
             socket.emit('error', { 
-                message: error.response?.data?.message || 'Failed to join game'
+                message: error.response?.data?.message || 'Failed to join public game'
             });
         }
     });
+    
+
+
+
 
 
     socket.on('createGame', async ({ playerName }) => {

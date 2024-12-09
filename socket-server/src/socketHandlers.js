@@ -7,8 +7,7 @@ const gameManagers = new Map();
 const games = new Map();
 const chats = new Map();
 
-//Public Games Liste
-const publicGames = new Map();
+
 
 function handleConnection(io, socket) {
     console.log('User connected:', socket.id);
@@ -194,137 +193,54 @@ function handleDisconnect(io, socket, currentGameId) {
 }
 
 
-// Functions for Public Game
-function handleCreatePublicGame(io, socket, { playerName }) {
-    const gameId = Math.random().toString(36).substring(2, 8);
-    const game = new Game(gameId);
-    const result = game.addPlayer(socket.id, playerName);
-    
-    if (result.success) {
-        publicGames.set(gameId, game);
-        
-        chats.set(gameId, new Chat());
-        socket.join(gameId);
-        socket.emit('gameCreated', { 
-            gameId,
-            message: 'Waiting for another player to join...'
-        });
-        io.to(gameId).emit('gameStateUpdate', game.getGameState());
-        return gameId;
-    } else {
-        socket.emit('error', { message: result.message });
-        return null;
-    }
-}
 
 
-//Hier schauen ob Platz in den Spielen ist und wenn ja joinen, wenn nicht eins weiter
-function handleJoinPublicGame(io, socket, { gameId, playerName }) {
-    const game = publicGames.get(gameId);
-    if (!game) {
-        socket.emit('error', { message: 'Game not found. Please check the game ID.' });
-        return null;
-    }
+function handleJoinPublicGame(io, socket, { playerName }) {
+    let publicGameId = null;
 
-    const result = game.addPlayer(socket.id, playerName);
-    if (result.success) {
-        socket.join(gameId);
-        io.to(gameId).emit('playerJoined', { 
-            message: `${playerName} joined the game!`,
-            gameState: game.getGameState()
-        });
-        return gameId;
-    } else {
-        socket.emit('error', { message: result.message });
-        return null;
-    }
-}
+    try {
+        // Nur öffentliche Spiele filtern
+        const publicGames = games.getAllGames().filter(game => game.public);
+        let targetGame = publicGames.find(game => game.players.length < 5);
 
-function handleRequestNewPublicGame(io, socket, { gameId }) {
-    const game = publicGames.get(gameId);
-    if (!game) {
-        socket.emit('error', { message: 'Game not found' });
-        return;
-    }
-
-    let gameManager = gameManagers.get(gameId);
-    if (!gameManager) {
-        gameManager = new NewGameManager(game);
-        gameManagers.set(gameId, gameManager);
-    }
-
-    const result = gameManager.requestNewGame(socket.id);
-    if (result.success) {
-        // Find all other players (instead of just one)
-        const otherPlayers = game.players.filter(p => p.id !== socket.id);
-        const requestingPlayer = game.players.find(p => p.id === socket.id);
-        
-        // Send request to all other players
-        otherPlayers.forEach(player => {
-            io.to(player.id).emit('newGameRequested', {
-                requestedBy: requestingPlayer.name
-            });
-        });
-    } else {
-        socket.emit('error', { message: result.message });
-    }
-}
-
-
-function handleMakeGuessPublic(io, socket, { gameId, letter }) {
-    const game = publicGames.get(gameId);
-    if (!game) {
-        socket.emit('error', { message: 'Game not found' });
-        return;
-    }
-
-    if (game.status !== 'playing') {
-        socket.emit('error', { message: 'Game is not in playing state' });
-        return;
-    }
-
-    const currentPlayer = game.getCurrentPlayer();
-    if (!currentPlayer || currentPlayer.id !== socket.id) {
-        socket.emit('error', { message: "It's not your turn" });
-        return;
-    }
-
-    const result = game.makeGuess(letter);
-    if (result === 'invalid') {
-        socket.emit('error', { message: 'Letter already guessed' });
-        return;
-    }
-
-    io.to(gameId).emit('gameStateUpdate', game.getGameState());
-    
-    if (result === 'win' || result === 'lose') {
-        game.players.forEach(player => {
-            io.to(player.id).emit('gameOver', { 
-                result, 
-                word: game.word,
-                isHost: player.id === game.players[0].id
-            });
-        });
-    }
-}
-
-function handleDisconnectPublic(io, socket, currentGameId) {
-    console.log('User disconnected:', socket.id);
-    if (currentGameId) {
-        const game = publicGames.get(currentGameId);
-        if (game && game.removePlayer(socket.id)) {
-            io.to(currentGameId).emit('playerLeft', {
-                message: 'Other player left the game',
-                gameState: game.getGameState()
-            });
+        if (!targetGame) {
+            // Neues öffentliches Spiel erstellen
+            targetGame = games.createGame(true); // `true` setzt das Spiel als öffentlich
+            console.log('Public Game created with ID:', targetGame.id);
         }
+
+        publicGameId = targetGame.id;
+
+        // Spieler hinzufügen
+        const result = targetGame.addPlayer(socket.id, playerName);
+        if (result.success) {
+            socket.join(publicGameId);
+            io.to(publicGameId).emit('playerJoined', { 
+                message: `${playerName} joined the public game!`,
+                gameState: targetGame.getGameState()
+            });
+        } else {
+            socket.emit('error', { message: result.message });
+        }
+
+        return publicGameId;
+    } catch (error) {
+        console.error('Error in handleJoinPublicGame:', error);
+        socket.emit('error', { message: 'Failed to join public game' });
+        return null;
     }
 }
+
+
+
+
+
 
 module.exports = {
     handleConnection,
     handleCreateGame,
     handleJoinGame,
+    handleJoinPublicGame,
     games,
     publicGames
 };

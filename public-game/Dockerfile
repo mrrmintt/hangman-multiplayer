@@ -21,6 +21,6 @@ RUN npm cache clean --force && \
 COPY . .
 
 # Port
-EXPOSE 3001
+EXPOSE 3005
 
 CMD ["node", "src/server.js"]

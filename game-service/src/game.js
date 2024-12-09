@@ -1,5 +1,5 @@
 class Game {
-    constructor(id) {
+    constructor(id, isPublic=false) {
         this.id = id;
         this.players = [];
         this.word = this.getRandomWord();
@@ -9,6 +9,7 @@ class Game {
         this.status = 'waiting';
         this.turnStartTime = Date.now();
         this.scores = new Map(); // For storing player scores
+        this.public= isPublic // Public or private Game
     }
 
     getRandomWord() {

@@ -1,5 +1,5 @@
 class Game {
-    constructor(id) {
+    constructor(id, isPublic=false) {
         this.id = id;
         this.players = [];
         this.word = this.getRandomWord();
@@ -9,6 +9,7 @@ class Game {
         this.status = 'waiting';
         this.turnStartTime = Date.now();
         this.scores = new Map(); // For storing player scores
+        this.public= isPublic // Public or private Game
     }
 
     getRandomWord() {
@@ -142,6 +143,28 @@ class Game {
             actualWord: this.word // Always include the actual word
         };
     }
+
+    getAllGames() {
+        return Array.from(games.values());
+    }
+
+    createGame(isPublic = false) {
+        const id = generateUniqueId();
+        const game = new Game(id, isPublic);
+        games.set(id, game);
+        return game;
+    }
+
+    getGame(gameId) {
+        return games.get(gameId);
+    }
+
+    removeGame(gameId) {
+        games.delete(gameId);
+    }
+
+    
 }
+
 
 module.exports = Game;

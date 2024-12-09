@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const PublicGame = require('./public_game');  
+const Game = require('./game');  //berücksichtigt auch public game durch boolean
 const app = express();
 
 const axios = require('axios');
@@ -9,10 +9,9 @@ const DB_SERVICE_URL = process.env.DB_SERVICE_URL || 'http://db-service:3003';
 app.use(cors());
 app.use(express.json());
 
-
-
-const publicGames = new Map();
+const games = new Map();
 const gameManagers = new Map();
+
 app.get('/health', (req, res) => {
     try {
         
@@ -20,7 +19,7 @@ app.get('/health', (req, res) => {
             status: 'healthy',
             timestamp: new Date().toISOString(),
             service: 'public-game',
-            activeGames: publicGames.size,
+            activeGames: games.size,
             uptime: Math.round(process.uptime()) + ' seconds'
         };
         res.status(200).json(healthStatus);
@@ -60,8 +59,9 @@ app.post('/public_game', (req, res) => {
     try {
         console.log('New game request received');
         const gameId = Math.random().toString(36).substring(2, 8);
-        const game = new Game(gameId);
-        publicGames.set(gameId, game);
+        //hier wichtig true damit public game
+        const game = new Game(gameId, true);
+        games.set(gameId, game);
         console.log('Created game with ID:', gameId);
         res.json({ gameId });
     } catch (error) {
@@ -71,60 +71,55 @@ app.post('/public_game', (req, res) => {
 });
 
 app.post('/public_games/:gameId/players', async (req, res) => {
-
-    for (let i = 0; i < publicGames.length; i++){
-
-        try {
-            const { gameId } = req.params;
-            const { playerId, playerName } = req.body;
-            
-            console.log(`Adding player ${playerName} to game ${gameId}`);
-            
-            const game = publicGames.get(gameId);
-            if (!game) {
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'Game not found' 
-                });
-            }
-            
-            const result = game.addPlayer(playerId, playerName);
-            if (result.success) {
-                console.log(`Successfully added player ${playerName}`);
-                
-                // If this is the third player, save initial scores
-                if (game.players.length === 3) {
-                    console.log('Third player joined, saving initial scores');
-                    await saveGameScores(gameId, game.players);
-                }
-    
-                res.json({
-                    success: true,
-                    gameState: game.getGameState()
-                });
-            } else {
-                console.log(`Failed to add player: ${result.message}`);
-                res.status(400).json({
-                    success: false,
-                    message: result.message
-                });
-            }
-        } catch (error) {
-            console.error('Error adding player:', error);
-            res.status(500).json({ 
+    try {
+        const { gameId } = req.params;
+        const { playerId, playerName } = req.body;
+        
+        console.log(`Adding player ${playerName} to game ${gameId}`);
+        
+        const game = games.get(gameId);
+        if (!game) {
+            return res.status(404).json({ 
                 success: false, 
-                message: error.message 
+                message: 'Game not found' 
             });
         }
-    }
+        
+        const result = game.addPlayer(playerId, playerName);
+        if (result.success) {
+            console.log(`Successfully added player ${playerName}`);
+            
+            // If this is the third player, save initial scores
+            if (game.players.length === 3) {
+                console.log('Third player joined, saving initial scores');
+                await saveGameScores(gameId, game.players);
+            }
 
-    
+            res.json({
+                success: true,
+                gameState: game.getGameState()
+            });
+        } else {
+            console.log(`Failed to add player: ${result.message}`);
+            res.status(400).json({
+                success: false,
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error('Error adding player:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
+        });
+    }
 });
+
 
 app.post('/public_games/:gameId/reset', (req, res) => {
     try {
         const { gameId } = req.params;
-        const game = publicGames.get(gameId);
+        const game = games.get(gameId);
         
         if (!game) {
             return res.status(404).json({ success: false, message: 'Game not found' });
@@ -151,7 +146,7 @@ app.post('/public_games/:gameId/guess', async (req, res) => {
         const { playerId, letter } = req.body;
         console.log(`Guess attempt in game ${gameId}: Letter ${letter} by player ${playerId}`);
 
-        const game = publicGames.get(gameId);
+        const game = games.get(gameId);
         if (!game) {
             return res.status(404).json({ 
                 success: false, 
@@ -239,14 +234,16 @@ app.post('/public_games/:gameId/guess', async (req, res) => {
     }
 });
 
+
+
 // GET-Route für alle öffentlichen Spiele
 app.get('/public_games', (req, res) => {
     try {
         // Map in ein Array umwandeln
-        const games = Array.from(publicGames.values());
+        const public_games = Array.from(games.values());
 
         // JSON-Antwort senden
-        res.json(games);
+        res.json(public_games);
     } catch (error) {
         console.error('Error fetching public games:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -265,7 +262,7 @@ app.get('/public_games/:gameId/scores', async (req, res) => {
     }
 });
 
-const PORT = 3001;
+const PORT = 3005;
 app.listen(PORT, () => {
-    console.log(`Game service running on port ${PORT}`);
+    console.log(`Public Game service running on port ${PORT}`);
 });
