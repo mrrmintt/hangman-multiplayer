@@ -29,6 +29,8 @@ function setupSocketIO(server) {
             if (joinedGameId) setCurrentGameId(joinedGameId);
         });
 
+
+        //For public game
         socket.on('joinPublicGame', ({ playerName }) => {
             const joinedGameId = handleJoinPublicGame(io, socket, { playerName });
             if (joinedGameId) {

@@ -94,7 +94,9 @@ io.on('connection', (socket) => {
                     // Reset both game and chat in parallel
                     const [gameResponse, chatResponse] = await Promise.all([
                         axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`),
-                        axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`)
+                        axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`),
+                        //Weiß nicht???
+                        axios.post(`${PUBLIC_GAME_URL}/games/${gameId}/reset`)
                     ]);
 
                     console.log('Game and chat reset successfully');
@@ -219,28 +221,35 @@ io.on('connection', (socket) => {
     socket.on('joinPublicGame', async ({ playerName }) => {
         console.log(`Join public game request from ${playerName}`);
         
+        console.log("Test1")
         try {
+            console.log("Test2")
             const publicGameId = await axios.get(`${PUBLIC_GAME_URL}/public_games`)
                 .then(response => {
+                    console.log("Test3")
                     const games = response.data;
+                    console.log("Test4")
                     let game = games.find(game => game.players.length < 5);
-    
+                    console.log("Test5")
                     if (!game) {
-                        return axios.post(`${PUBLIC_GAME_URL}/public_games`)
+                        return axios.post(`${PUBLIC_GAME_URL}/public_game`)
                             .then(createResponse => createResponse.data.gameId);
                     }
+                    console.log("Test6")
                     
                     return game.id;
                 });
-    
+                
             if (!publicGameId) {
                 throw new Error('No available public game found or created');
             }
+            console.log("Test6")
     
             const response = await axios.post(`${PUBLIC_GAME_URL}/public_games/${publicGameId}/players`, {
                 playerId: socket.id,
                 playerName
             });
+            console.log("Test7")
     
             if (response.data.success) {
                 socket.join(publicGameId);
@@ -249,6 +258,7 @@ io.on('connection', (socket) => {
                     gameState: response.data.gameState
                 });
             }
+            console.log("Test8")
         } catch (error) {
             console.error('Error in joinPublicGame:', error);
             socket.emit('error', { 

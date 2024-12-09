@@ -55,6 +55,7 @@ async function saveGameScores(gameId, players) {
 
 }
 
+// Create new public game
 app.post('/public_game', (req, res) => {
     try {
         console.log('New game request received');

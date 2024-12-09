@@ -199,7 +199,7 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     let publicGameId = null;
 
     try {
-        // Nur öffentliche Spiele filtern
+        // Nur öff spiele und unter 5spiueler
         const publicGames = games.getAllGames().filter(game => game.public);
         let targetGame = publicGames.find(game => game.players.length < 5);
 
