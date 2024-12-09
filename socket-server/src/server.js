@@ -229,7 +229,7 @@ io.on('connection', (socket) => {
                     console.log("Test3")
                     const games = response.data;
                     console.log("Test4")
-                    let game = games.find(game => game.players.length < 5);
+                    let game = games.find(game => game.players.length < 3);
                     console.log("Test5")
                     if (!game) {
                         return axios.post(`${PUBLIC_GAME_URL}/public_game`)
