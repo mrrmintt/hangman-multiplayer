@@ -39,8 +39,7 @@ const axios = require('axios');
 const GAME_SERVICE_URL = process.env.GAME_SERVICE_URL || 'http://localhost:3001';
 const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:3002';
 
-//Hier noch was machen???
-const PUBLIC_GAME_URL = process.env.PUBLIC_GAME_URL || 'http://localhost:3005';
+
 const activeGames = new Map();
 app.use(cors({
     origin: "http://localhost:80",
@@ -225,67 +224,48 @@ io.on('connection', (socket) => {
     socket.on('joinPublicGame', async ({ playerName }) => {
         console.log(`Join public game request from ${playerName}`);
         
-        console.log("Test1")
         try {
-            console.log("Test2")
             const publicGameId = await axios.get(`${GAME_SERVICE_URL}/games`)
-            .then(response => {
-                console.log("Test3");
-                const games = response.data;
-                console.log("Test4");
+                .then(response => {
+                    const games = response.data;
+                    let game = games.find(game => game.public === true && game.players.length < 3);
+        
+                    if (!game) {
+                        // Erstelle ein neues Spiel, wenn kein passendes gefunden wurde
+                        return axios.post(`${GAME_SERVICE_URL}/public_game`)
+                            .then(createResponse => {
+                                const newGameId = createResponse.data.gameId;
+                                return axios.post(`${CHAT_SERVICE_URL}/chats`, { gameId: newGameId })
+                                    .then(() => newGameId); // Rückgabe der neuen gameId
+                            });
+                    }
+        
+                    return game.id;
+                });
     
-                // Filtere Spiele, die public sind und weniger als 3 Spieler haben
-                let game = games.find(game => game.public === true && game.players.length < 3);
-                console.log("Test5");
-    
-                if (!game) {
-                    // Erstelle ein neues Spiel, wenn kein passendes gefunden wurde
-                    return axios.post(`${GAME_SERVICE_URL}/public_game`)
-                        .then(createResponse => {
-                            const newGameId = createResponse.data.gameId;
-    
-                            // Create chat for this game
-                            console.log('Creating chat for game...');
-                            return axios.post(`${CHAT_SERVICE_URL}/chats`, { gameId: newGameId })
-                                .then(() => newGameId); // Rückgabe der neuen gameId
-                        });
-                }
-    
-                console.log("Test6");
-                return game.id;
-            });
-    
-            // Setze das Spiel in activeGames
-            activeGames.set(publicGameId, {
-                id: publicGameId,
-                players: [{ id: socket.id, name: playerName }]
-            });
-            
             if (!publicGameId) {
                 throw new Error('No available public game found or created');
             }
-            console.log("Test6")
-        
+    
             const response = await axios.post(`${GAME_SERVICE_URL}/games/${publicGameId}/players`, {
                 playerId: socket.id,
                 playerName
             });
-            console.log("Test7")
-        
+    
             if (response.data.success) {
                 const game = activeGames.get(publicGameId);
                 if (game) {
                     game.players.push({id: socket.id, name: playerName});
                 }
                 socket.join(publicGameId);
-                io.to(publicGameId).emit('playerJoined', {
+                // Sende das Spiel zusammen mit dem gameState an alle Spieler im öffentlichen Spiel
+                io.to(publicGameId).emit('publicGameJoined', {
                     message: `${playerName} joined the public game!`,
-                    gameState: response.data.gameState
+                    gameState: response.data.gameState,
+                    publicGameId // optional: ID kann auch übermittelt werden
                 });
             }
-            console.log("Test8")
-            // Sende die gameId an den Client zurück
-            socket.emit('publicGameJoined', { publicGameId });
+    
         } catch (error) {
             console.error('Error in joinPublicGame:', error);
             socket.emit('error', { 
@@ -293,6 +273,7 @@ io.on('connection', (socket) => {
             });
         }
     });
+    
     
 
 

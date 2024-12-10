@@ -338,6 +338,22 @@ socket.on('playerJoined', ({ message, gameState }) => {
     updateGameState(gameState);
 });
 
+//Für Public Game damit die ID zurückkommt
+socket.on('publicGameJoined', ({ publicGameId, gameState }) => {
+    console.log('Successfully joined public game with ID:', publicGameId);
+    
+    // Setze die gameId hier
+    currentGameId = publicGameId;
+
+    // Jetzt kannst du das Spiel mit der gameId weiter nutzen
+    showStatus('You have successfully joined the public game!', 'success');
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    document.getElementById('current-game-id').textContent = currentGameId;
+    updateGameState(gameState); // Update den Spielstatus auf dem Client
+});
+
+
 socket.on('playerLeft', ({ message, gameState }) => {
     showStatus(message, 'error');
     updateGameState(gameState);
@@ -551,17 +567,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-//Für Public Game damit die ID zurückkommt
-socket.on('publicGameJoined', ({ publicGameId }) => {
-    console.log('Successfully joined public game with ID:', publicGameId);
-    
-    // Setze die gameId hier
-    currentGameId = publicGameId;
-
-    // Jetzt kannst du das Spiel mit der gameId weiter nutzen
-    showStatus('You have successfully joined the public game!', 'success');
-    
-    // Hier kannst du den weiteren Ablauf starten, z.B. das Spiel-UI anzeigen
-    //document.getElementById('menu').style.display = 'none';
-    //document.getElementById('game-container').style.display = 'block';
-});
