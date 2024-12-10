@@ -252,6 +252,8 @@ function makeGuess(letter) {
 }
 // Chat functions
 function sendChatMessage() {
+    console.log("Message")
+    console.log("GameID: "+currentGameId)
     const chatInput = document.getElementById('chat-input');
     const message = chatInput.value.trim();
     
