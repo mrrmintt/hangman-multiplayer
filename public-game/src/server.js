@@ -63,7 +63,7 @@ app.post('/public_game', (req, res) => {
         //hier wichtig true damit public game
         const game = new Game(gameId, true);
         games.set(gameId, game);
-        console.log('Created game with ID:', gameId);
+        console.log('Created public game with ID:', gameId);
         res.json({ gameId });
     } catch (error) {
         console.error('Error creating game:', error);

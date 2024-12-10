@@ -179,6 +179,7 @@ function startTurnTimer() {
 }
 
 function createGame() {
+    let publicGame= false
     console.log('Create game clicked');
     const playerNameInput = document.getElementById('player-name');
     if (!playerNameInput) {
@@ -198,7 +199,7 @@ function createGame() {
     console.log('Emitting createGame event with:', { playerName });
     
     resetChat();
-    socket.emit('createGame', { playerName });
+    socket.emit('createGame', { playerName, publicGame });
 }
 
 function joinGame() {

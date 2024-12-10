@@ -18,6 +18,7 @@ function handleConnection(io, socket) {
     socket.on('makeGuess', (data) => handleMakeGuess(io, socket, data));
     socket.on('chatMessage', (data) => handleChatMessage(io, socket, data));
     socket.on('disconnect', () => handleDisconnect(io, socket, currentGameId));
+    
 
     return {
         currentGameId,
@@ -36,9 +37,10 @@ function handleChatMessage(io, socket, { gameId, message, playerName }) {
     io.to(gameId).emit('chatMessage', newMessage);
 }
 
-function handleCreateGame(io, socket, { playerName }) {
+
+function handleCreateGame(io, socket, { playerName, publicGame }) {
     const gameId = Math.random().toString(36).substring(2, 8);
-    const game = new Game(gameId);
+    const game = new Game(gameId, publicGame);
     const result = game.addPlayer(socket.id, playerName);
     
     if (result.success) {
@@ -201,6 +203,7 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     try {
         // Nur öff spiele und unter 5spiueler
         const publicGames = games.getAllGames().filter(game => game.public);
+        console.log("Public Games: "+publicGames)
         let targetGame = publicGames.find(game => game.players.length < 5);
 
         if (!targetGame) {

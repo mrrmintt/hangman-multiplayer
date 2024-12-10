@@ -132,6 +132,8 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+
     socket.on('chatMessage', async ({ gameId, message, playerName }) => {
         console.log(`Chat message from ${playerName} in game ${gameId}: ${message}`);
         try {
@@ -149,6 +151,8 @@ io.on('connection', (socket) => {
             socket.emit('error', { message: 'Failed to send chat message' });
         }
     });
+
+
     socket.on('makeGuess', async ({ gameId, letter }) => {
         console.log(`Guess attempt from ${socket.id}: Letter ${letter} in game ${gameId}`);
         try {
@@ -224,34 +228,48 @@ io.on('connection', (socket) => {
         console.log("Test1")
         try {
             console.log("Test2")
-            const publicGameId = await axios.get(`${PUBLIC_GAME_URL}/public_games`)
-                .then(response => {
-                    console.log("Test3")
-                    const games = response.data;
-                    console.log("Test4")
-                    let game = games.find(game => game.players.length < 3);
-                    console.log("Test5")
-                    if (!game) {
-                        return axios.post(`${PUBLIC_GAME_URL}/public_game`)
-                            .then(createResponse => createResponse.data.gameId);
-                    }
-                    console.log("Test6")
-                    
-                    return game.id;
-                });
-                
-            if (!publicGameId) {
-                throw new Error('No available public game found or created');
-            }
+            const publicGameId = await axios.get(`${GAME_SERVICE_URL}/games`)
+            .then(response => {
+                console.log("Test3");
+                const games = response.data;
+                console.log("Test4");
+        
+                // Filtere Spiele, die public sind und weniger als 3 Spieler haben
+                let game = games.find(game => game.public === true && game.players.length < 3);
+                console.log("Test5");
+        
+                if (!game) {
+                    // Erstelle ein neues Spiel, wenn kein passendes gefunden wurde
+                    return axios.post(`${GAME_SERVICE_URL}/public_game`)
+                        .then(createResponse => createResponse.data.gameId);
+                }
+        
+                console.log("Test6");
+                return game.id;
+            });
+        
+        // Setze das Spiel in activeGames
+        activeGames.set(publicGameId, {
+            id: publicGameId,
+            players: [{ id: socket.id, name: playerName }]
+        });
+        
+        if (!publicGameId) {
+            throw new Error('No available public game found or created');
+        }
             console.log("Test6")
     
-            const response = await axios.post(`${PUBLIC_GAME_URL}/public_games/${publicGameId}/players`, {
+            const response = await axios.post(`${GAME_SERVICE_URL}/games/${publicGameId}/players`, {
                 playerId: socket.id,
                 playerName
             });
             console.log("Test7")
     
             if (response.data.success) {
+                const game = activeGames.get(publicGameId);
+                if (game) {
+                    game.players.push({id: socket.id, name: playerName});
+                }
                 socket.join(publicGameId);
                 io.to(publicGameId).emit('playerJoined', {
                     message: `${playerName} joined the public game!`,
@@ -266,9 +284,6 @@ io.on('connection', (socket) => {
             });
         }
     });
-    
-
-
 
 
 

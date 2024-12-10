@@ -52,6 +52,7 @@ async function saveGameScores(gameId, players) {
 
 }
 
+//Create Game
 app.post('/games', (req, res) => {
     try {
         console.log('New game request received');
@@ -238,6 +239,37 @@ app.get('/games/:gameId/scores', async (req, res) => {
     } catch (error) {
         console.error('Error getting game scores:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Create new public game
+app.post('/public_game', (req, res) => {
+    try {
+        console.log('New game request received');
+        const gameId = Math.random().toString(36).substring(2, 8);
+        //hier wichtig true damit public game
+        const game = new Game(gameId, true);
+        games.set(gameId, game);
+        console.log('Created public game with ID:', gameId);
+        res.json({ gameId });
+    } catch (error) {
+        console.error('Error creating game:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// GET-Route für alle Spiele
+app.get('/games', (req, res) => {
+    try {
+        // Map in ein Array umwandeln
+        const public_games = Array.from(games.values());
+
+        // JSON-Antwort senden
+        res.json(public_games);
+    } catch (error) {
+        console.error('Error fetching public games:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

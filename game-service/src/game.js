@@ -143,6 +143,25 @@ class Game {
             actualWord: this.word // Always include the actual word
         };
     }
+
+    getAllGames() {
+        return Array.from(games.values());
+    }
+
+    createGame(isPublic = false) {
+        const id = generateUniqueId();
+        const game = new Game(id, isPublic);
+        games.set(id, game);
+        return game;
+    }
+
+    getGame(gameId) {
+        return games.get(gameId);
+    }
+
+    removeGame(gameId) {
+        games.delete(gameId);
+    }
 }
 
 module.exports = Game;
