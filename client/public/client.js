@@ -427,6 +427,9 @@ socket.on('gameOver', ({ result, word, isHost }) => {
         console.log('This player is not host, no new game button shown');
     }
 });
+
+
+
 function requestNewGame() {
     console.log('Requesting new game for:', currentGameId);
     
@@ -439,6 +442,8 @@ function requestNewGame() {
     // Emit the event
     socket.emit('requestNewGame', { gameId: currentGameId });
 }
+
+
 function respondToNewGame(accepted) {
     console.log('Responding to new game request:', accepted);
     socket.emit('newGameResponse', { gameId: currentGameId, accepted });

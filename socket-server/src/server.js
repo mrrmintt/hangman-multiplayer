@@ -94,8 +94,7 @@ io.on('connection', (socket) => {
                     const [gameResponse, chatResponse] = await Promise.all([
                         axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`),
                         axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`),
-                        //Weiß nicht???
-                        axios.post(`${PUBLIC_GAME_URL}/games/${gameId}/reset`)
+                        
                     ]);
 
                     console.log('Game and chat reset successfully');
