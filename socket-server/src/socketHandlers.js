@@ -18,6 +18,7 @@ function handleConnection(io, socket) {
     socket.on('makeGuess', (data) => handleMakeGuess(io, socket, data));
     socket.on('chatMessage', (data) => handleChatMessage(io, socket, data));
     socket.on('disconnect', () => handleDisconnect(io, socket, currentGameId));
+    socket.on('newGame', (data) => handleNewGame(io, socket, data));
     
 
     return {
@@ -234,7 +235,37 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     }
 }
 
+async function handleNewGame(io, socket, {gameId}){
+    const game = games.get(gameId);
+    
+        if (!game || !game.public) {
+            console.error('Invalid game or not a public game');
+            return;
+        }
+    
+    
+        try {
+            console.log('Starting new public game for Game ID:', gameId);
+            game.isResetting = true; // Setze das Reset-Flag
+    
+            const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`);
+            
+            console.log('Game reset successfully:', gameResponse.data.gameState);
+    
+            // Informiere alle Spieler über den Start des neuen Spiels
+            io.to(gameId).emit('newGameStarted', {
+                message: 'New Public Game is starting!',
+                gameState: gameResponse.data.gameState
+            });
+        } catch (error) {
+            console.error('Error resetting game:', error.message);
+            io.to(gameId).emit('error', {
+                message: 'Failed to start a new public game.'
+            });
+        } 
+    
 
+}
 
 
 
@@ -244,6 +275,7 @@ module.exports = {
     handleCreateGame,
     handleJoinGame,
     handleJoinPublicGame,
+    handleNewGame,
     games,
     publicGames
 };

@@ -390,8 +390,10 @@ socket.on('returnToMenu', ({ message }) => {
         resetChat(); // Reset chat when returning to menu
     }, 2000);
 });
-socket.on('gameOver', ({ result, word, isHost }) => {
-    console.log('Game Over received:', { result, word, isHost });
+
+
+socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
+    console.log('Game Over received:', { result, word, isHost, publicGame });
     
     // Clear any existing timer
     if (turnTimer) {
@@ -406,6 +408,19 @@ socket.on('gameOver', ({ result, word, isHost }) => {
         `Game Over! The word was: ${word}`;
     showStatus(message, result === 'win' ? 'success' : 'error');
     
+    console.log("PublicGame: "+ publicGame)
+    if(publicGame){
+        console.log("public game beendet")
+        
+        console.log("wurde emitted")
+        socket.emit('newGame', { gameId: gameId });
+                        
+                    
+        
+
+    }else{
+
+
     // Show new game button for host with a slight delay
     if (isHost) {
         console.log('This player is host, showing new game button');
@@ -425,9 +440,13 @@ socket.on('gameOver', ({ result, word, isHost }) => {
         }, 1000);
     } else {
         console.log('This player is not host, no new game button shown');
+        }
     }
 });
 
+function directNewGame(){
+    socket.emit('newGame', { gameId: currentGameId });
+}
 
 
 function requestNewGame() {

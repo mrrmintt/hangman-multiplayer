@@ -160,22 +160,35 @@ io.on('connection', (socket) => {
             });
     
             // Send game state update
+            let check= io.to(gameId).emit('gameStateUpdate', response.data.gameState);
             io.to(gameId).emit('gameStateUpdate', response.data.gameState);
+
+            console.log("Was ist das: "+check)
+            console.log(response.data.gameState.status)
+            console.log(response.data.gameState.remainingGuesses)
     
             // Check if game is over
             if (response.data.gameState.status === 'finished' || 
                 response.data.gameState.remainingGuesses <= 0) {
                 
+                    console.log("geht")
                 const game = activeGames.get(gameId);
+                console.log(game)
                 if (game) {
                     console.log('Game Over detected, emitting to players');
+
+                    
+
                     game.players.forEach(player => {
                         io.to(player.id).emit('gameOver', {
                             result: response.data.gameState.remainingGuesses <= 0 ? 'lose' : 'win',
                             word: response.data.gameState.actualWord, // Use the actual word here
-                            isHost: player.id === game.players[0].id
+                            isHost: player.id === game.players[0].id,
+                            publicGame: game.publicGame,
+                            gameId: gameId
                         });
                     });
+
                 }
             }
         } catch (error) {
@@ -264,6 +277,12 @@ io.on('connection', (socket) => {
                     publicGameId // optional: ID kann auch übermittelt werden
                 });
             }
+            // Store game info locally
+            activeGames.set(publicGameId, {
+                id: publicGameId,
+                players: [{id: socket.id, name: playerName}],
+                publicGame: true
+            });
     
         } catch (error) {
             console.error('Error in joinPublicGame:', error);
@@ -274,7 +293,42 @@ io.on('connection', (socket) => {
     });
     
     
-
+    socket.on('newGame', async ({ gameId }) => {
+        const game = activeGames.get(gameId);
+    
+        if (!game || !game.publicGame) {
+            console.error('Invalid game or not a public game');
+            return;
+        }
+    
+        // Verhindere parallele Resets
+        if (game.isResetting) {
+            console.log('Game reset already in progress');
+            return;
+        }
+    
+        try {
+            console.log('Starting new public game for Game ID:', gameId);
+            game.isResetting = true; // Setze das Reset-Flag
+    
+            const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`);
+            
+            console.log('Game reset successfully:', gameResponse.data.gameState);
+    
+            // Informiere alle Spieler über den Start des neuen Spiels
+            io.to(gameId).emit('newGameStarted', {
+                message: 'New Public Game is starting!',
+                gameState: gameResponse.data.gameState
+            });
+        } catch (error) {
+            console.error('Error resetting game:', error.message);
+            io.to(gameId).emit('error', {
+                message: 'Failed to start a new public game.'
+            });
+        } finally {
+            game.isResetting = false;
+        }
+    });
 
 
     socket.on('createGame', async ({ playerName }) => {
@@ -289,7 +343,8 @@ io.on('connection', (socket) => {
             // Store game info locally
             activeGames.set(gameId, {
                 id: gameId,
-                players: [{id: socket.id, name: playerName}]
+                players: [{id: socket.id, name: playerName}],
+                publicGame: false
             });
             
             // Create chat for this game

@@ -2,7 +2,9 @@ const socketIO = require('socket.io');
 const { 
     handleConnection, 
     handleCreateGame, 
-    handleJoinGame 
+    handleJoinGame,
+    handleJoinPublicGame,
+    handleNewGame 
 } = require('./socketHandlers');
 
 
@@ -27,6 +29,11 @@ function setupSocketIO(server) {
         socket.on('joinGame', ({ gameId, playerName }) => {
             const joinedGameId = handleJoinGame(io, socket, { gameId, playerName });
             if (joinedGameId) setCurrentGameId(joinedGameId);
+        });
+
+        //For new public game
+        socket.on('newGame', ({ gameId }) => {
+            const joinedGameId = handleNewGame({gameId})
         });
 
 

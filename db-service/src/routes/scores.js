@@ -16,7 +16,7 @@ router.get('/daily-winners', async (req, res) => {
         .sort('-score')
         .limit(10);
         
-        console.log('Found winners:', winners);
+       // console.log('Found winners:', winners);
         
         res.json(winners);
     } catch (error) {

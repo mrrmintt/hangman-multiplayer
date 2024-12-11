@@ -273,6 +273,31 @@ app.get('/games', (req, res) => {
     }
 });
 
+// GET-Route für alle Spiele
+app.get('/game/:gameId', (req, res) => {
+    try {
+        // Die gameId aus den Routenparametern extrahieren
+        const { gameId } = req.params;
+
+        // Map in ein Array umwandeln
+        const public_games = Array.from(games.values());
+
+        // Das Spiel mit der passenden gameId finden
+        const game = public_games.find(g => g.id === gameId);
+
+        if (!game) {
+            // Wenn kein Spiel gefunden wurde, sende einen 404-Fehler
+            return res.status(404).json({ error: 'Game not found' });
+        }
+
+        // JSON-Antwort mit dem gefundenen Spiel senden
+        res.json(game);
+    } catch (error) {
+        console.error('Error fetching game:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Game service running on port ${PORT}`);
