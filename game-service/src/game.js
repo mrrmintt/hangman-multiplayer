@@ -1,3 +1,11 @@
+/* 
+* Core game logic class managing multiplayer hangman mechanics.
+* Handles player management, turn-based gameplay, scoring system,
+* and supports both public/private game modes.
+*/
+
+
+//init
 class Game {
     constructor(id, isPublic=false) {
         this.id = id;
@@ -23,7 +31,7 @@ class Game {
         this.currentPlayerIndex = 0;
         this.status = 'playing';
         this.turnStartTime = Date.now();
-        // Note: We don't reset scores here to maintain them across rounds
+        
     }
     addPlayer(playerId, playerName) {
         if (this.players.length < 3 && this.status === 'waiting') {
@@ -32,7 +40,7 @@ class Game {
             }
             this.players.push({ 
                 id: playerId, 
-                name: playerName   // Stelle sicher, dass der Name hier korrekt gesetzt wird
+                name: playerName   
             });
             this.scores.set(playerId, 0);
             
@@ -56,7 +64,7 @@ class Game {
                 this.status = 'finished';
                 return true;
             }
-            // Adjust currentPlayerIndex if necessary
+            
             if (this.currentPlayerIndex >= this.players.length) {
                 this.currentPlayerIndex = 0;
             }
@@ -77,7 +85,7 @@ class Game {
             return { result: 'invalid', score: 0 };
         }
     
-        // Handle empty guess (timeout)
+        
         if (letter === '') {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
             this.turnStartTime = Date.now();

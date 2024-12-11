@@ -2,7 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const Chat = require('./chat');
 const app = express();
-
+/* 
+* Core Express server setup for the chat service.
+* Uses in-memory storage with Map for chat management.
+* chats are not persistent and will be lost on server restart.
+*/
 app.use(cors());
 app.use(express.json());
 

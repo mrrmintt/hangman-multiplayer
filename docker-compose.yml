@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+# Core Database Layer
   mongodb:
     image: mongo:latest
     ports:
@@ -20,7 +21,7 @@ services:
       - hangman-network
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/hangman
-
+ # Load Balancer & Routing
   nginx:
     image: nginx:latest
     ports:
@@ -60,7 +61,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
+# Application Services (3 instances each)
   game-service:
     build: ./game-service
     expose:
@@ -119,7 +120,7 @@ services:
       start_period: 40s
 
 
-  chat-service:
+  chat-service: #  chat-service-2,3 
     build: ./chat-service
     expose:
       - "3002"
@@ -173,7 +174,7 @@ services:
       retries: 3
       start_period: 40s
 
-  socket-server:
+  socket-server: # socket-server-2,3
     build: ./socket-server
     expose:
       - "3000"

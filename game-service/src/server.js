@@ -1,3 +1,8 @@
+/* 
+* Game service managing hangman game instances 
+* game creation, player management, gameplay mechanics, 
+* score persistence through DB service integration.
+*/
 const express = require('express');
 const cors = require('cors');
 const Game = require('./game');  
@@ -40,7 +45,7 @@ async function saveScore(gameId, playerName, score) {
         console.error('Error saving score:', error);
     }
 }
-// Helper function to save game scores
+
 async function saveGameScores(gameId, players) {
     try {
         for (const player of players) {
@@ -150,7 +155,7 @@ app.post('/games/:gameId/guess', async (req, res) => {
             });
         }
 
-        // Verify it's the player's turn
+        
         const currentPlayer = game.getCurrentPlayer();
         if (!currentPlayer || currentPlayer.id !== playerId) {
             return res.status(400).json({ 
@@ -159,19 +164,18 @@ app.post('/games/:gameId/guess', async (req, res) => {
             });
         }
 
-        // Make the guess
+        
         const result = game.makeGuess(letter);
         const gameState = game.getGameState();
 
-        // Speichere Punkte für erfolgreichen Versuch
-        // Entferne oder ändere diesen Teil:
+        
         if (result.score > 0) {
             await axios.post(`${DB_SERVICE_URL}/scores`, {
                 gameId,
                 playerName: currentPlayer.name,
                 score: result.score,
                 playDate: new Date(),
-                isWinner: false  // Normale Punkte sind keine Gewinner
+                isWinner: false  
             });
         }
 
@@ -183,7 +187,7 @@ app.post('/games/:gameId/guess', async (req, res) => {
                 (b.score || 0) - (a.score || 0)
             );
             
-            // Speichere Gewinner
+           
             if (sortedPlayers.length > 0) {
                 const winnerData = {
                     gameId,
@@ -230,7 +234,7 @@ app.post('/games/:gameId/guess', async (req, res) => {
     }
 });
 
-// New endpoint to get game scores
+
 app.get('/games/:gameId/scores', async (req, res) => {
     try {
         const { gameId } = req.params;
@@ -247,7 +251,7 @@ app.post('/public_game', (req, res) => {
     try {
         console.log('New game request received');
         const gameId = Math.random().toString(36).substring(2, 8);
-        //hier wichtig true damit public game
+        
         const game = new Game(gameId, true);
         games.set(gameId, game);
         console.log('Created public game with ID:', gameId);
@@ -259,13 +263,13 @@ app.post('/public_game', (req, res) => {
 });
 
 
-// GET-Route für alle Spiele
+// GET-Route for all games
 app.get('/games', (req, res) => {
     try {
-        // Map in ein Array umwandeln
+        
         const public_games = Array.from(games.values());
 
-        // JSON-Antwort senden
+
         res.json(public_games);
     } catch (error) {
         console.error('Error fetching public games:', error);
@@ -273,24 +277,18 @@ app.get('/games', (req, res) => {
     }
 });
 
-// GET-Route für alle Spiele
+
 app.get('/game/:gameId', (req, res) => {
     try {
-        // Die gameId aus den Routenparametern extrahieren
+        
         const { gameId } = req.params;
-
-        // Map in ein Array umwandeln
         const public_games = Array.from(games.values());
-
-        // Das Spiel mit der passenden gameId finden
         const game = public_games.find(g => g.id === gameId);
-
         if (!game) {
-            // Wenn kein Spiel gefunden wurde, sende einen 404-Fehler
+            // no game founded
             return res.status(404).json({ error: 'Game not found' });
         }
 
-        // JSON-Antwort mit dem gefundenen Spiel senden
         res.json(game);
     } catch (error) {
         console.error('Error fetching game:', error);

@@ -2,7 +2,11 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-// MIME-Type für CSS explizit setzen
+/* 
+* Express server setup for serving game files.
+* Includes proper content type handling for CSS and
+* serves the main game interface from public directory.
+*/
 app.use(express.static('public', {
     setHeaders: (res, path, stat) => {
         if (path.endsWith('.css')) {

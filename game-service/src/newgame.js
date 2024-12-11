@@ -1,8 +1,9 @@
+//Game restart management system
 class NewGameManager {
     constructor(game) {
         this.game = game;
         this.pendingNewGameRequest = false;
-        this.playerResponses = new Map(); // Track responses from each player
+        this.playerResponses = new Map(); 
     }
 
     requestNewGame(hostId) {
@@ -16,7 +17,7 @@ class NewGameManager {
         }
 
         this.pendingNewGameRequest = true;
-        this.playerResponses.clear(); // Clear previous responses
+        this.playerResponses.clear(); 
         return { success: true };
     }
 
@@ -25,7 +26,7 @@ class NewGameManager {
             return { success: false, message: 'No pending new game request' };
         }
 
-        // Record this player's response
+        
         this.playerResponses.set(playerId, accepted);
 
         // Check if we have responses from all non-host players

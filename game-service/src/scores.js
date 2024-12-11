@@ -1,3 +1,4 @@
+//Score management system. Time based.
 class ScoreManager {
     constructor() {
         this.scores = new Map();
@@ -16,9 +17,13 @@ class ScoreManager {
     calculateScore(playerId, isCorrect, guessTime) {
         if (!this.turnStartTime) return 0;
         
-        const timeTaken = (guessTime - this.turnStartTime) / 1000; // Convert to seconds
+        const timeTaken = (guessTime - this.turnStartTime) / 1000; 
         let points = 0;
-
+        /*
+        * Core scoring logic that rewards faster correct guesses.
+        * Awards 10 points for guesses under 5 seconds
+        * and 5 points for guesses under 10 seconds.
+        */
         if (isCorrect) {
             if (timeTaken <= 5) {
                 points = 10;  // Fast correct guess

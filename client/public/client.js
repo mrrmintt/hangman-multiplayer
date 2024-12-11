@@ -1,5 +1,10 @@
 console.log('Client script loading...');
-
+/*
+* Basically Frontend
+* Core game state management and UI update functions.
+* Handles player turns, timer countdown, game events and chat.      
+* Uses socket.io events to sync game state across players.
+*/
 const socket = io({
     path: '/socket.io',
     transports: ['websocket', 'polling'],
@@ -8,8 +13,9 @@ const socket = io({
     reconnectionDelay: 1000,
     secure: false
 });
+//hangman images but with signs (Completely chat-GPT generated)
 const HANGMAN_STATES = [
-    // 0 Fehler
+    
     `
      +---+
      |   |
@@ -18,25 +24,25 @@ const HANGMAN_STATES = [
          |
          |
     ==========`,
-    // 1 Fehler
-    `
-     +---+
-     |   |
-     O   |
-         |
-         |
-         |
-    ==========`,
-    // 2 Fehler
+    
     `
      +---+
      |   |
      O   |
+         |
+         |
+         |
+    ==========`,
+   
+    `
+     +---+
+     |   |
+     O   |
      |   |
          |
          |
     ==========`,
-    // 3 Fehler
+    
     `
      +---+
      |   |
@@ -45,7 +51,7 @@ const HANGMAN_STATES = [
          |
          |
     ==========`,
-    // 4 Fehler
+    
     `
      +---+
      |   |
@@ -54,7 +60,7 @@ const HANGMAN_STATES = [
          |
          |
     ==========`,
-    // 5 Fehler
+    
     `
      +---+
      |   |
@@ -63,7 +69,7 @@ const HANGMAN_STATES = [
     /    |
          |
     ==========`,
-    // 6 Fehler - Game Over
+    
     `
      +---+
      |   |
@@ -82,7 +88,7 @@ function updateHangman(remainingGuesses) {
     );
     document.getElementById('hangman-drawing').innerHTML = HANGMAN_STATES[stateIndex];
 }
-// Debug-Logs hinzufügen
+
 socket.on('connect', () => {
     console.log('Connected to socket server with ID:', socket.id);
 });
@@ -123,7 +129,7 @@ function initializeGame() {
 }
 
 function showStatus(message, type = 'info') {
-    console.log('Status:', message, type); // Debug log
+    console.log('Status:', message, type); 
     const statusDiv = document.getElementById('status');
     statusDiv.textContent = message;
     statusDiv.className = type;
@@ -157,7 +163,7 @@ function updateTimer() {
     }
 }
 function startTurnTimer() {
-    // Clear existing timer
+    
     if (turnTimer) {
         clearInterval(turnTimer);
         turnTimer = null;
@@ -173,7 +179,7 @@ function startTurnTimer() {
         if (timeLeft <= 0) {
             clearInterval(turnTimer);
             turnTimer = null;
-            makeGuess(''); // Empty guess for timeout
+            makeGuess(''); 
         }
     }, 1000);
 }
@@ -195,7 +201,7 @@ function createGame() {
         return;
     }
     
-    // Debug-Log hinzufügen
+   
     console.log('Emitting createGame event with:', { playerName });
     
     resetChat();
@@ -302,21 +308,21 @@ socket.on('disconnect', () => {
 });
 
 socket.on('gameCreated', (data) => {
-    console.log('Game created event received:', data); // Debug log
+    console.log('Game created event received:', data); 
     currentGameId = data.gameId;
-    console.log('Setting game ID:', currentGameId); // Debug log
+    console.log('Setting game ID:', currentGameId); 
     
-    // Hide menu and show game container
+    
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
     
-    // Update game ID display
+   
     document.getElementById('current-game-id').textContent = currentGameId;
     
-    // Show waiting message
+    
     showStatus(data.message || 'Waiting for other players...', 'info');
     
-    console.log('UI updated for new game'); // Debug log
+    console.log('UI updated for new game'); 
 });
 
 socket.on('error', ({ message }) => {
@@ -330,7 +336,7 @@ socket.on('gameStateUpdate', (gameState) => {
 });
 
 socket.on('playerJoined', ({ message, gameState }) => {
-    console.log('Player joined:', message); // Debug log
+    console.log('Player joined:', message); 
     showStatus(message, 'success');
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
@@ -338,19 +344,19 @@ socket.on('playerJoined', ({ message, gameState }) => {
     updateGameState(gameState);
 });
 
-//Für Public Game damit die ID zurückkommt
+
 socket.on('publicGameJoined', ({ publicGameId, gameState }) => {
     console.log('Successfully joined public game with ID:', publicGameId);
     
-    // Setze die gameId hier
+   
     currentGameId = publicGameId;
 
-    // Jetzt kannst du das Spiel mit der gameId weiter nutzen
+    
     showStatus('You have successfully joined the public game!', 'success');
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
     document.getElementById('current-game-id').textContent = currentGameId;
-    updateGameState(gameState); // Update den Spielstatus auf dem Client
+    updateGameState(gameState); 
 });
 
 
@@ -374,7 +380,7 @@ socket.on('newGameRequested', ({ requestedBy }) => {
 
 socket.on('newGameStarted', ({ message, gameState }) => {
     console.log('Starting new game with state:', gameState);
-    gameStarted = false; // Reset game started flag
+    gameStarted = false; 
     showStatus(message, 'success');
     updateGameState(gameState);
     hideNewGameElements();
@@ -432,7 +438,7 @@ socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
                 newGameButton.style.opacity = '1';
                 console.log('Set button display to block');
                 
-                // Force button visibility
+                
                 newGameButton.setAttribute('style', 'display: block !important; margin-top: 20px;');
             } else {
                 console.error('New game button element not found');
@@ -452,13 +458,13 @@ function directNewGame(){
 function requestNewGame() {
     console.log('Requesting new game for:', currentGameId);
     
-    // Hide the button
+    
     const newGameButton = document.getElementById('request-new-game');
     if (newGameButton) {
         newGameButton.style.display = 'none';
     }
 
-    // Emit the event
+    
     socket.emit('requestNewGame', { gameId: currentGameId });
 }
 
@@ -504,7 +510,7 @@ function updateGameState(gameState) {
     const currentPlayerName = gameState.currentPlayer ? gameState.currentPlayer.name : 'Waiting...';
     document.getElementById('current-player').textContent = currentPlayerName;
 
-    // Update letter buttons
+   
     
     const isMyTurn = gameState.currentPlayer && gameState.currentPlayer.id === socket.id;   
     const buttons = document.getElementById('letters').getElementsByTagName('button');
@@ -539,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-// Add chat enter key handler
+
 document.getElementById('chat-input').addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
         sendChatMessage();
@@ -575,16 +581,16 @@ async function loadDailyWinners() {
     }
 }
 
-// Nur EINMAL registrieren
+
 document.addEventListener('DOMContentLoaded', () => {
     loadDailyWinners();
     setInterval(loadDailyWinners, 30000);
 });
 
-// Beim Laden der Seite ausführen
+
 document.addEventListener('DOMContentLoaded', () => {
     loadDailyWinners();
-    // Alle 30 Sekunden aktualisieren
+    
     setInterval(loadDailyWinners, 30000);
 });
 

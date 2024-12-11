@@ -1,3 +1,4 @@
+//Score management router handling winners tracking and CRUD operations.
 const express = require('express');
 const router = express.Router();
 const Score = require('../models/score');
@@ -6,7 +7,7 @@ router.get('/daily-winners', async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        // Debug logs hinzufügen
+        
         console.log('Searching for winners since:', today);
         
         const winners = await Score.find({
