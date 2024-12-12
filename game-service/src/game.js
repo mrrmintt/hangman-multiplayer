@@ -35,9 +35,9 @@ class Game {
     }
     addPlayer(playerId, playerName) {
         if (this.players.length < 3 && this.status === 'waiting') {
-            if (this.players.some(p => p.name === playerName)) {
-                return { success: false, message: 'This name is already taken in this game' };
-            }
+           // if (this.players.some(p => p.name === playerName)) {
+            //    return { success: false, message: 'This name is already taken in this game' };
+            //}
             this.players.push({ 
                 id: playerId, 
                 name: playerName   

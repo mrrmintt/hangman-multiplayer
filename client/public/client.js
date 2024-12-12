@@ -107,7 +107,8 @@ socket.on('connect_timeout', () => {
     console.error('Socket connection timeout');
 });
 
-
+// Hide Element on start page
+document.getElementById('game-container').style.display = 'none';
 
 
 
