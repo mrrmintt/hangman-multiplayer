@@ -380,6 +380,7 @@ socket.on('newGameRequested', ({ requestedBy }) => {
 
 socket.on('newGameStarted', ({ message, gameState }) => {
     console.log('Starting new game with state:', gameState);
+    
     gameStarted = false; 
     showStatus(message, 'success');
     updateGameState(gameState);
@@ -396,6 +397,7 @@ socket.on('returnToMenu', ({ message }) => {
         resetChat(); // Reset chat when returning to menu
     }, 2000);
 });
+
 
 
 socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
@@ -419,6 +421,7 @@ socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
         console.log("public game beendet")
         
         console.log("wurde emitted")
+       
         socket.emit('newGame', { gameId: gameId });
                         
                     
@@ -449,10 +452,6 @@ socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
         }
     }
 });
-
-function directNewGame(){
-    socket.emit('newGame', { gameId: currentGameId });
-}
 
 
 function requestNewGame() {

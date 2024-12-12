@@ -98,6 +98,7 @@ io.on('connection', (socket) => {
                     ]);
 
                     console.log('Game and chat reset successfully');
+
                     io.to(gameId).emit('newGameStarted', {
                         message: 'All players accepted! Starting new game!',
                         gameState: gameResponse.data.gameState
@@ -176,8 +177,6 @@ io.on('connection', (socket) => {
                 console.log(game)
                 if (game) {
                     console.log('Game Over detected, emitting to players');
-
-                    
 
                     game.players.forEach(player => {
                         io.to(player.id).emit('gameOver', {
@@ -314,7 +313,9 @@ io.on('connection', (socket) => {
             const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`);
             
             console.log('Game reset successfully:', gameResponse.data.gameState);
-    
+
+            // Wait to read word
+            await new Promise(resolve => setTimeout(resolve, 3000));
             // Informiere alle Spieler über den Start des neuen Spiels
             io.to(gameId).emit('newGameStarted', {
                 message: 'New Public Game is starting!',
