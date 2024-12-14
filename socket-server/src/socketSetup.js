@@ -1,10 +1,10 @@
 const socketIO = require('socket.io');
-const { 
-    handleConnection, 
-    handleCreateGame, 
+const {
+    handleConnection,
+    handleCreateGame,
     handleJoinGame,
     handleJoinPublicGame,
-    handleNewGame 
+    handleNewGame
 } = require('./socketHandlers');
 
 
@@ -17,10 +17,10 @@ function setupSocketIO(server) {
             credentials: true
         }
     });
-    
+
     io.on('connection', (socket) => {
         const { setCurrentGameId } = handleConnection(io, socket);
-        
+
         socket.on('createGame', ({ playerName }) => {
             const gameId = handleCreateGame(io, socket, { playerName });
             if (gameId) setCurrentGameId(gameId);
@@ -33,7 +33,7 @@ function setupSocketIO(server) {
 
         //For new public game
         socket.on('newGame', ({ gameId }) => {
-            const joinedGameId = handleNewGame({gameId})
+            const joinedGameId = handleNewGame({ gameId })
         });
 
 
@@ -43,7 +43,7 @@ function setupSocketIO(server) {
             if (joinedGameId) {
                 setCurrentGameId(joinedGameId);
             }
-        });        
+        });
     });
 
 

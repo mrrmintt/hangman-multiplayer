@@ -15,7 +15,7 @@ const socket = io({
 });
 //hangman images but with signs (Completely chat-GPT generated)
 const HANGMAN_STATES = [
-    
+
     `
      +---+
      |   |
@@ -24,25 +24,25 @@ const HANGMAN_STATES = [
          |
          |
     ==========`,
-    
-    `
-     +---+
-     |   |
-     O   |
-         |
-         |
-         |
-    ==========`,
-   
+
     `
      +---+
      |   |
      O   |
+         |
+         |
+         |
+    ==========`,
+
+    `
+     +---+
+     |   |
+     O   |
      |   |
          |
          |
     ==========`,
-    
+
     `
      +---+
      |   |
@@ -51,7 +51,7 @@ const HANGMAN_STATES = [
          |
          |
     ==========`,
-    
+
     `
      +---+
      |   |
@@ -60,7 +60,7 @@ const HANGMAN_STATES = [
          |
          |
     ==========`,
-    
+
     `
      +---+
      |   |
@@ -69,7 +69,7 @@ const HANGMAN_STATES = [
     /    |
          |
     ==========`,
-    
+
     `
      +---+
      |   |
@@ -83,7 +83,7 @@ const HANGMAN_STATES = [
 function updateHangman(remainingGuesses) {
     const maxGuesses = 8;
     const stateIndex = Math.min(
-        HANGMAN_STATES.length - 1, 
+        HANGMAN_STATES.length - 1,
         Math.floor((maxGuesses - remainingGuesses) * (HANGMAN_STATES.length / maxGuesses))
     );
     document.getElementById('hangman-drawing').innerHTML = HANGMAN_STATES[stateIndex];
@@ -114,8 +114,8 @@ document.getElementById('game-container').style.display = 'none';
 
 let playerName = '';
 let currentGameId = '';
-let turnTimer = null;  
-let timeLeft = 10;     
+let turnTimer = null;
+let timeLeft = 10;
 let gameStarted = false;
 
 function initializeGame() {
@@ -130,7 +130,7 @@ function initializeGame() {
 }
 
 function showStatus(message, type = 'info') {
-    console.log('Status:', message, type); 
+    console.log('Status:', message, type);
     const statusDiv = document.getElementById('status');
     statusDiv.textContent = message;
     statusDiv.className = type;
@@ -152,7 +152,7 @@ function updateTimer() {
     const timerElement = document.getElementById('turn-timer');
     if (timerElement) {
         timerElement.textContent = timeLeft;
-        
+
         // Change color based on time remaining
         if (timeLeft > 5) {
             timerElement.style.color = 'green';
@@ -164,47 +164,47 @@ function updateTimer() {
     }
 }
 function startTurnTimer() {
-    
+
     if (turnTimer) {
         clearInterval(turnTimer);
         turnTimer = null;
     }
-    
+
     timeLeft = 10;
     updateTimer();
 
     turnTimer = setInterval(() => {
         timeLeft--;
         updateTimer();
-        
+
         if (timeLeft <= 0) {
             clearInterval(turnTimer);
             turnTimer = null;
-            makeGuess(''); 
+            makeGuess('');
         }
     }, 1000);
 }
 
 function createGame() {
-    let publicGame= false
+    let publicGame = false
     console.log('Create game clicked');
     const playerNameInput = document.getElementById('player-name');
     if (!playerNameInput) {
         console.error('Player name input not found');
         return;
     }
-    
+
     playerName = playerNameInput.value.trim();
     console.log('Player name:', playerName);
-    
+
     if (!playerName) {
         showStatus('Please enter your name', 'error');
         return;
     }
-    
-   
+
+
     console.log('Emitting createGame event with:', { playerName });
-    
+
     resetChat();
     socket.emit('createGame', { playerName, publicGame });
 }
@@ -227,7 +227,7 @@ function joinPublicGame() {
     console.log('Join Public game clicked');
     playerName = document.getElementById('player-name').value.trim();
     //const gameId = document.getElementById('game-id').value.trim();
-    if (!playerName ) {
+    if (!playerName) {
         showStatus('Please enter your name ', 'error');
         return;
     }
@@ -239,7 +239,7 @@ function joinPublicGame() {
 function makeGuess(letter) {
     console.log("Make Guess")
     if (!currentGameId) return;
-    
+
     // Start game if this is the first move
     if (!gameStarted && letter !== '') {
         gameStarted = true;
@@ -260,10 +260,10 @@ function makeGuess(letter) {
 // Chat functions
 function sendChatMessage() {
     console.log("Message")
-    console.log("GameID: "+currentGameId)
+    console.log("GameID: " + currentGameId)
     const chatInput = document.getElementById('chat-input');
     const message = chatInput.value.trim();
-    
+
     if (message) {
         console.log('Sending chat message:', message);
         socket.emit('chatMessage', {
@@ -280,13 +280,13 @@ function displayChatMessage(message) {
     const chatMessages = document.getElementById('chat-messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message';
-    
+
     messageDiv.innerHTML = `
         <span class="chat-timestamp">[${message.timestamp}]</span>
         <span class="chat-username">${message.username}:</span>
         <span class="chat-text">${message.message}</span>
     `;
-    
+
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
 }
@@ -309,21 +309,21 @@ socket.on('disconnect', () => {
 });
 
 socket.on('gameCreated', (data) => {
-    console.log('Game created event received:', data); 
+    console.log('Game created event received:', data);
     currentGameId = data.gameId;
-    console.log('Setting game ID:', currentGameId); 
-    
-    
+    console.log('Setting game ID:', currentGameId);
+
+
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
-    
-   
+
+
     document.getElementById('current-game-id').textContent = currentGameId;
-    
-    
+
+
     showStatus(data.message || 'Waiting for other players...', 'info');
-    
-    console.log('UI updated for new game'); 
+
+    console.log('UI updated for new game');
 });
 
 socket.on('error', ({ message }) => {
@@ -337,7 +337,7 @@ socket.on('gameStateUpdate', (gameState) => {
 });
 
 socket.on('playerJoined', ({ message, gameState }) => {
-    console.log('Player joined:', message); 
+    console.log('Player joined:', message);
     showStatus(message, 'success');
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
@@ -348,16 +348,16 @@ socket.on('playerJoined', ({ message, gameState }) => {
 
 socket.on('publicGameJoined', ({ publicGameId, gameState }) => {
     console.log('Successfully joined public game with ID:', publicGameId);
-    
-   
+
+
     currentGameId = publicGameId;
 
-    
+
     showStatus('You have successfully joined the public game!', 'success');
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
     document.getElementById('current-game-id').textContent = currentGameId;
-    updateGameState(gameState); 
+    updateGameState(gameState);
 });
 
 
@@ -375,18 +375,18 @@ socket.on('newGameRequested', ({ requestedBy }) => {
     console.log('New game requested by:', requestedBy);
     const confirmDiv = document.getElementById('new-game-confirm');
     confirmDiv.style.display = 'block';
-    document.getElementById('confirm-message').textContent = 
+    document.getElementById('confirm-message').textContent =
         `${requestedBy} wants to start a new game. Do you accept?`;
 });
 
 socket.on('newGameStarted', ({ message, gameState }) => {
     console.log('Starting new game with state:', gameState);
-    
-    gameStarted = false; 
+
+    gameStarted = false;
     showStatus(message, 'success');
     updateGameState(gameState);
     hideNewGameElements();
-    
+
 });
 socket.on('returnToMenu', ({ message }) => {
     console.log('Returning to menu:', message);
@@ -403,53 +403,53 @@ socket.on('returnToMenu', ({ message }) => {
 
 socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
     console.log('Game Over received:', { result, word, isHost, publicGame });
-    
+
     // Clear any existing timer
     if (turnTimer) {
         clearInterval(turnTimer);
         turnTimer = null;
     }
-    
+
     gameStarted = false; // Reset game started state
-    
-    const message = result === 'win' ? 
+
+    const message = result === 'win' ?
         `Congratulations! You've won! The word was: ${word}` :
         `Game Over! The word was: ${word}`;
     showStatus(message, result === 'win' ? 'success' : 'error');
-    
-    console.log("PublicGame: "+ publicGame)
-    if(publicGame){
+
+    console.log("PublicGame: " + publicGame)
+    if (publicGame) {
         console.log("public game beendet")
-        
+
         console.log("wurde emitted")
-       
+
         socket.emit('newGame', { gameId: gameId });
-                        
-                    
-        
-
-    }else{
 
 
-    // Show new game button for host with a slight delay
-    if (isHost) {
-        console.log('This player is host, showing new game button');
-        setTimeout(() => {
-            const newGameButton = document.getElementById('request-new-game');
-            console.log('Found new game button:', newGameButton);
-            if (newGameButton) {
-                newGameButton.style.display = 'block';
-                newGameButton.style.opacity = '1';
-                console.log('Set button display to block');
-                
-                
-                newGameButton.setAttribute('style', 'display: block !important; margin-top: 20px;');
-            } else {
-                console.error('New game button element not found');
-            }
-        }, 1000);
+
+
     } else {
-        console.log('This player is not host, no new game button shown');
+
+
+        // Show new game button for host with a slight delay
+        if (isHost) {
+            console.log('This player is host, showing new game button');
+            setTimeout(() => {
+                const newGameButton = document.getElementById('request-new-game');
+                console.log('Found new game button:', newGameButton);
+                if (newGameButton) {
+                    newGameButton.style.display = 'block';
+                    newGameButton.style.opacity = '1';
+                    console.log('Set button display to block');
+
+
+                    newGameButton.setAttribute('style', 'display: block !important; margin-top: 20px;');
+                } else {
+                    console.error('New game button element not found');
+                }
+            }, 1000);
+        } else {
+            console.log('This player is not host, no new game button shown');
         }
     }
 });
@@ -457,14 +457,14 @@ socket.on('gameOver', ({ result, word, isHost, publicGame, gameId }) => {
 
 function requestNewGame() {
     console.log('Requesting new game for:', currentGameId);
-    
-    
+
+
     const newGameButton = document.getElementById('request-new-game');
     if (newGameButton) {
         newGameButton.style.display = 'none';
     }
 
-    
+
     socket.emit('requestNewGame', { gameId: currentGameId });
 }
 
@@ -487,7 +487,7 @@ function updateGameState(gameState) {
     // Update players list with scores
     const playersContainer = document.getElementById('players-container');
     playersContainer.innerHTML = '';
-    
+
     if (gameState.status === 'waiting') {
         playersContainer.innerHTML = `
             <div class="waiting-message">
@@ -510,17 +510,17 @@ function updateGameState(gameState) {
     const currentPlayerName = gameState.currentPlayer ? gameState.currentPlayer.name : 'Waiting...';
     document.getElementById('current-player').textContent = currentPlayerName;
 
-   
-    
-    const isMyTurn = gameState.currentPlayer && gameState.currentPlayer.id === socket.id;   
+
+
+    const isMyTurn = gameState.currentPlayer && gameState.currentPlayer.id === socket.id;
     const buttons = document.getElementById('letters').getElementsByTagName('button');
     Array.from(buttons).forEach(button => {
-        button.disabled = 
+        button.disabled =
             gameState.guessedLetters.includes(button.textContent) ||
             !isMyTurn ||
             gameState.status !== 'playing';
-        
-        button.classList.toggle('used', 
+
+        button.classList.toggle('used',
             gameState.guessedLetters.includes(button.textContent));
     });
 
@@ -554,11 +554,11 @@ document.getElementById('chat-input').addEventListener('keypress', (event) => {
 // Funktion zum Laden der Tagesgewinner
 async function loadDailyWinners() {
     try {
-        console.log('Fetching daily winners...');
+        console.log('Fetching daily winners...');       
 
         const response = await fetch('/db/scores/daily-winners');
         const winners = await response.json();
-        
+
         console.log('Received winners:', winners);
 
         const winnersDiv = document.getElementById('daily-winners');
@@ -566,7 +566,7 @@ async function loadDailyWinners() {
             winnersDiv.innerHTML = '<div class="no-winners">No games played today yet!</div>';
             return;
         }
-        
+
         winnersDiv.innerHTML = winners.map(winner => `
             <div class="winner-item">
                 <span class="winner-name">${winner.playerName}</span>
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadDailyWinners();
-    
+
     setInterval(loadDailyWinners, 30000);
 });
 

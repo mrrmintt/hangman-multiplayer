@@ -6,19 +6,19 @@ router.get('/daily-winners', async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        
+
+
         console.log('Searching for winners since:', today);
-        
+
         const winners = await Score.find({
             playDate: { $gte: today },
             isWinner: true
         })
-        .sort('-score')
-        .limit(10);
-        
-       // console.log('Found winners:', winners);
-        
+            .sort('-score')
+            .limit(10);
+
+        // console.log('Found winners:', winners);
+
         res.json(winners);
     } catch (error) {
         console.error('Error getting daily winners:', error);
@@ -49,9 +49,9 @@ router.get('/:gameId', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         console.log('Received score data:', req.body); // Debug log
-        
+
         const { gameId, playerName, score, playDate, isWinner } = req.body;
-        
+
         const scoreData = {
             gameId,
             playerName,
@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
 
         const newScore = new Score(scoreData);
         await newScore.save();
-        
+
         console.log('Score saved:', newScore); // Debug log
         res.json(newScore);
     } catch (error) {

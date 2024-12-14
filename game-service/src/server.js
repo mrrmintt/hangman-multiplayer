@@ -5,7 +5,7 @@
 */
 const express = require('express');
 const cors = require('cors');
-const Game = require('./game');  
+const Game = require('./game');
 const app = express();
 
 const axios = require('axios');
@@ -18,7 +18,7 @@ const games = new Map();
 const gameManagers = new Map();
 app.get('/health', (req, res) => {
     try {
-        
+
         const healthStatus = {
             status: 'healthy',
             timestamp: new Date().toISOString(),
@@ -76,21 +76,21 @@ app.post('/games/:gameId/players', async (req, res) => {
     try {
         const { gameId } = req.params;
         const { playerId, playerName } = req.body;
-        
+
         console.log(`Adding player ${playerName} to game ${gameId}`);
-        
+
         const game = games.get(gameId);
         if (!game) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Game not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Game not found'
             });
         }
-        
+
         const result = game.addPlayer(playerId, playerName);
         if (result.success) {
             console.log(`Successfully added player ${playerName}`);
-            
+
             // If this is the third player, save initial scores
             if (game.players.length === 3) {
                 console.log('Third player joined, saving initial scores');
@@ -110,9 +110,9 @@ app.post('/games/:gameId/players', async (req, res) => {
         }
     } catch (error) {
         console.error('Error adding player:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message 
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 });
@@ -121,7 +121,7 @@ app.post('/games/:gameId/reset', (req, res) => {
     try {
         const { gameId } = req.params;
         const game = games.get(gameId);
-        
+
         if (!game) {
             return res.status(404).json({ success: false, message: 'Game not found' });
         }
@@ -149,45 +149,45 @@ app.post('/games/:gameId/guess', async (req, res) => {
 
         const game = games.get(gameId);
         if (!game) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Game not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Game not found'
             });
         }
 
-        
+
         const currentPlayer = game.getCurrentPlayer();
         if (!currentPlayer || currentPlayer.id !== playerId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "It's not your turn" 
+            return res.status(400).json({
+                success: false,
+                message: "It's not your turn"
             });
         }
 
-        
+
         const result = game.makeGuess(letter);
         const gameState = game.getGameState();
 
-        
+
         if (result.score > 0) {
             await axios.post(`${DB_SERVICE_URL}/scores`, {
                 gameId,
                 playerName: currentPlayer.name,
                 score: result.score,
                 playDate: new Date(),
-                isWinner: false  
+                isWinner: false
             });
         }
 
-        
+
         // Handle game over states and save final scores
         if (result.result === 'win' || result.result === 'lose') {
             console.log('Game over, saving final scores');
-            const sortedPlayers = gameState.players.sort((a, b) => 
+            const sortedPlayers = gameState.players.sort((a, b) =>
                 (b.score || 0) - (a.score || 0)
             );
-            
-           
+
+
             if (sortedPlayers.length > 0) {
                 const winnerData = {
                     gameId,
@@ -197,7 +197,7 @@ app.post('/games/:gameId/guess', async (req, res) => {
                     isWinner: true
                 };
                 console.log('Saving winner data:', winnerData);
-                
+
                 try {
                     const response = await axios.post(`${DB_SERVICE_URL}/scores`, winnerData);
                     console.log('Winner saved:', response.data);
@@ -205,7 +205,7 @@ app.post('/games/:gameId/guess', async (req, res) => {
                     console.error('Error saving winner:', error);
                 }
             }
-            
+
             return res.json({
                 success: true,
                 result: result.result,
@@ -217,7 +217,7 @@ app.post('/games/:gameId/guess', async (req, res) => {
             });
         }
 
-        
+
         res.json({
             success: true,
             result,
@@ -227,9 +227,9 @@ app.post('/games/:gameId/guess', async (req, res) => {
 
     } catch (error) {
         console.error('Error processing guess:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message 
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 });
@@ -251,7 +251,7 @@ app.post('/public_game', (req, res) => {
     try {
         console.log('New game request received');
         const gameId = Math.random().toString(36).substring(2, 8);
-        
+
         const game = new Game(gameId, true);
         games.set(gameId, game);
         console.log('Created public game with ID:', gameId);
@@ -266,7 +266,7 @@ app.post('/public_game', (req, res) => {
 // GET-Route for all games
 app.get('/games', (req, res) => {
     try {
-        
+
         const public_games = Array.from(games.values());
 
 
@@ -280,7 +280,7 @@ app.get('/games', (req, res) => {
 
 app.get('/game/:gameId', (req, res) => {
     try {
-        
+
         const { gameId } = req.params;
         const public_games = Array.from(games.values());
         const game = public_games.find(g => g.id === gameId);

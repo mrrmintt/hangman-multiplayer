@@ -7,7 +7,7 @@
 
 //init
 class Game {
-    constructor(id, isPublic=false) {
+    constructor(id, isPublic = false) {
         this.id = id;
         this.players = [];
         this.word = this.getRandomWord();
@@ -17,7 +17,7 @@ class Game {
         this.status = 'waiting';
         this.turnStartTime = Date.now();
         this.scores = new Map(); // For storing player scores
-        this.public= isPublic // Public or private Game
+        this.public = isPublic // Public or private Game
     }
 
     getRandomWord() {
@@ -31,19 +31,19 @@ class Game {
         this.currentPlayerIndex = 0;
         this.status = 'playing';
         this.turnStartTime = Date.now();
-        
+
     }
     addPlayer(playerId, playerName) {
         if (this.players.length < 3 && this.status === 'waiting') {
-           // if (this.players.some(p => p.name === playerName)) {
+            // if (this.players.some(p => p.name === playerName)) {
             //    return { success: false, message: 'This name is already taken in this game' };
             //}
-            this.players.push({ 
-                id: playerId, 
-                name: playerName   
+            this.players.push({
+                id: playerId,
+                name: playerName
             });
             this.scores.set(playerId, 0);
-            
+
             if (this.players.length === 3) {
                 this.status = 'playing';
                 this.turnStartTime = Date.now();
@@ -52,8 +52,8 @@ class Game {
         }
         return { success: false, message: 'Game is full or already in progress' };
     }
-    
-    
+
+
 
     removePlayer(playerId) {
         const index = this.players.findIndex(p => p.id === playerId);
@@ -64,7 +64,7 @@ class Game {
                 this.status = 'finished';
                 return true;
             }
-            
+
             if (this.currentPlayerIndex >= this.players.length) {
                 this.currentPlayerIndex = 0;
             }
@@ -80,22 +80,22 @@ class Game {
         if (this.status !== 'playing') {
             return { result: 'invalid', score: 0 };
         }
-    
+
         if (this.guessedLetters.has(letter)) {
             return { result: 'invalid', score: 0 };
         }
-    
-        
+
+
         if (letter === '') {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
             this.turnStartTime = Date.now();
             return { result: 'continue', score: 0 };
         }
-    
+
         const timeTaken = (Date.now() - this.turnStartTime) / 1000;
         this.guessedLetters.add(letter);
         let score = 0;
-    
+
         const currentPlayer = this.getCurrentPlayer();
         if (this.word.includes(letter)) {
             if (timeTaken <= 5) {
@@ -107,10 +107,10 @@ class Game {
         } else {
             this.remainingGuesses--;
         }
-    
+
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.turnStartTime = Date.now();
-    
+
         if (this.isWordGuessed()) {
             this.status = 'finished';
             return { result: 'win', score, word: this.word };
@@ -118,7 +118,7 @@ class Game {
             this.status = 'finished';
             return { result: 'lose', score, word: this.word };
         }
-    
+
         return { result: 'continue', score };
     }
 
@@ -126,7 +126,7 @@ class Game {
         return [...this.word].every(letter => this.guessedLetters.has(letter));
     }
 
-    
+
 
     getGameState() {
         // Sort players by score
@@ -134,11 +134,11 @@ class Game {
             ...player,
             score: this.scores.get(player.id) || 0
         })).sort((a, b) => b.score - a.score);
-    
+
         return {
-            word: this.status === 'finished' ? 
+            word: this.status === 'finished' ?
                 this.word : // Show full word if game is finished
-                [...this.word].map(letter => 
+                [...this.word].map(letter =>
                     this.guessedLetters.has(letter) ? letter : '_'
                 ).join(''),
             guessedLetters: Array.from(this.guessedLetters),

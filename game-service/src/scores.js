@@ -16,8 +16,8 @@ class ScoreManager {
 
     calculateScore(playerId, isCorrect, guessTime) {
         if (!this.turnStartTime) return 0;
-        
-        const timeTaken = (guessTime - this.turnStartTime) / 1000; 
+
+        const timeTaken = (guessTime - this.turnStartTime) / 1000;
         let points = 0;
         /*
         * Core scoring logic that rewards faster correct guesses.

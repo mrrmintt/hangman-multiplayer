@@ -1,14 +1,9 @@
-- open 4 terminals
-- one terminal for one container (Folder)
-- npm install
-- node src/server.js
+docker-compose up --build 
 
-**ORDER IS IMPORTANG**
-node socket-server folder at first then client folder then game-service and at last chat-service. 
-
-If you have a problem with cors ==> npm install express cors
-
-
+to access databank:
+-docker exec -it hangman-multiplayer-mongodb-1 mongosh
+-use hangman
+-db.scores.find()
 
 
 healthcheck while docker running:

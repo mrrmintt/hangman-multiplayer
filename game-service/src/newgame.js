@@ -3,7 +3,7 @@ class NewGameManager {
     constructor(game) {
         this.game = game;
         this.pendingNewGameRequest = false;
-        this.playerResponses = new Map(); 
+        this.playerResponses = new Map();
     }
 
     requestNewGame(hostId) {
@@ -17,7 +17,7 @@ class NewGameManager {
         }
 
         this.pendingNewGameRequest = true;
-        this.playerResponses.clear(); 
+        this.playerResponses.clear();
         return { success: true };
     }
 
@@ -26,19 +26,19 @@ class NewGameManager {
             return { success: false, message: 'No pending new game request' };
         }
 
-        
+
         this.playerResponses.set(playerId, accepted);
 
         // Check if we have responses from all non-host players
         const nonHostPlayers = this.game.players.filter(p => p.id !== this.game.players[0].id);
-        const haveAllResponses = nonHostPlayers.every(player => 
+        const haveAllResponses = nonHostPlayers.every(player =>
             this.playerResponses.has(player.id)
         );
 
         if (haveAllResponses) {
             // Check if all players accepted
             const allAccepted = Array.from(this.playerResponses.values()).every(response => response);
-            
+
             this.pendingNewGameRequest = false;
             this.playerResponses.clear();
 
@@ -49,15 +49,15 @@ class NewGameManager {
                 this.game.remainingGuesses = 8;
                 this.game.status = 'playing';
                 this.game.currentPlayerIndex = 0;
-                
-                return { 
-                    success: true, 
+
+                return {
+                    success: true,
                     result: 'accepted',
-                    gameState: this.game.getGameState() 
+                    gameState: this.game.getGameState()
                 };
             } else {
-                return { 
-                    success: true, 
+                return {
+                    success: true,
                     result: 'rejected'
                 };
             }

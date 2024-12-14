@@ -19,7 +19,7 @@ function handleConnection(io, socket) {
     socket.on('chatMessage', (data) => handleChatMessage(io, socket, data));
     socket.on('disconnect', () => handleDisconnect(io, socket, currentGameId));
     socket.on('newGame', (data) => handleNewGame(io, socket, data));
-    
+
 
     return {
         currentGameId,
@@ -43,13 +43,13 @@ function handleCreateGame(io, socket, { playerName, publicGame }) {
     const gameId = Math.random().toString(36).substring(2, 8);
     const game = new Game(gameId, publicGame);
     const result = game.addPlayer(socket.id, playerName);
-    
+
     if (result.success) {
         games.set(gameId, game);
-        
+
         chats.set(gameId, new Chat());
         socket.join(gameId);
-        socket.emit('gameCreated', { 
+        socket.emit('gameCreated', {
             gameId,
             message: 'Waiting for another player to join...'
         });
@@ -71,7 +71,7 @@ function handleJoinGame(io, socket, { gameId, playerName }) {
     const result = game.addPlayer(socket.id, playerName);
     if (result.success) {
         socket.join(gameId);
-        io.to(gameId).emit('playerJoined', { 
+        io.to(gameId).emit('playerJoined', {
             message: `${playerName} joined the game!`,
             gameState: game.getGameState()
         });
@@ -100,7 +100,7 @@ function handleRequestNewGame(io, socket, { gameId }) {
         // Find all other players (instead of just one)
         const otherPlayers = game.players.filter(p => p.id !== socket.id);
         const requestingPlayer = game.players.find(p => p.id === socket.id);
-        
+
         // Send request to all other players
         otherPlayers.forEach(player => {
             io.to(player.id).emit('newGameRequested', {
@@ -131,13 +131,13 @@ function handleNewGameResponse(io, socket, { gameId, accepted }) {
         } else if (result.result === 'accepted') {
             // Reset chat for new game
             chats.set(gameId, new Chat());
-            io.to(gameId).emit('newGameStarted', { 
+            io.to(gameId).emit('newGameStarted', {
                 message: 'All players accepted! Starting new game!',
-                gameState: result.gameState 
+                gameState: result.gameState
             });
         } else {
-            io.to(gameId).emit('returnToMenu', { 
-                message: 'New game rejected. Returning to menu...' 
+            io.to(gameId).emit('returnToMenu', {
+                message: 'New game rejected. Returning to menu...'
             });
         }
     } else {
@@ -170,11 +170,11 @@ function handleMakeGuess(io, socket, { gameId, letter }) {
     }
 
     io.to(gameId).emit('gameStateUpdate', game.getGameState());
-    
+
     if (result === 'win' || result === 'lose') {
         game.players.forEach(player => {
-            io.to(player.id).emit('gameOver', { 
-                result, 
+            io.to(player.id).emit('gameOver', {
+                result,
                 word: game.word,
                 isHost: player.id === game.players[0].id
             });
@@ -204,7 +204,7 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     try {
         // Nur öff spiele und unter 5spiueler
         const publicGames = games.getAllGames().filter(game => game.public);
-        console.log("Public Games: "+publicGames)
+        console.log("Public Games: " + publicGames)
         let targetGame = publicGames.find(game => game.players.length < 5);
 
         if (!targetGame) {
@@ -219,7 +219,7 @@ function handleJoinPublicGame(io, socket, { playerName }) {
         const result = targetGame.addPlayer(socket.id, playerName);
         if (result.success) {
             socket.join(publicGameId);
-            io.to(publicGameId).emit('playerJoined', { 
+            io.to(publicGameId).emit('playerJoined', {
                 message: `${playerName} joined the public game!`,
                 gameState: targetGame.getGameState()
             });
@@ -235,35 +235,35 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     }
 }
 
-async function handleNewGame(io, socket, {gameId}){
+async function handleNewGame(io, socket, { gameId }) {
     const game = games.get(gameId);
-    
-        if (!game || !game.public) {
-            console.error('Invalid game or not a public game');
-            return;
-        }
-    
-    
-        try {
-            console.log('Starting new public game for Game ID:', gameId);
-            game.isResetting = true; // Setze das Reset-Flag
-    
-            const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`);
-            
-            console.log('Game reset successfully:', gameResponse.data.gameState);
-    
-            // Informiere alle Spieler über den Start des neuen Spiels
-            io.to(gameId).emit('newGameStarted', {
-                message: 'New Public Game is starting!',
-                gameState: gameResponse.data.gameState
-            });
-        } catch (error) {
-            console.error('Error resetting game:', error.message);
-            io.to(gameId).emit('error', {
-                message: 'Failed to start a new public game.'
-            });
-        } 
-    
+
+    if (!game || !game.public) {
+        console.error('Invalid game or not a public game');
+        return;
+    }
+
+
+    try {
+        console.log('Starting new public game for Game ID:', gameId);
+        game.isResetting = true; // Setze das Reset-Flag
+
+        const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`);
+
+        console.log('Game reset successfully:', gameResponse.data.gameState);
+
+        // Informiere alle Spieler über den Start des neuen Spiels
+        io.to(gameId).emit('newGameStarted', {
+            message: 'New Public Game is starting!',
+            gameState: gameResponse.data.gameState
+        });
+    } catch (error) {
+        console.error('Error resetting game:', error.message);
+        io.to(gameId).emit('error', {
+            message: 'Failed to start a new public game.'
+        });
+    }
+
 
 }
 
