@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket Test</title>
+</head>
+
+<body>
+    <h1>Socket.IO Test</h1>
+    <div id="status">Connecting...</div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        console.log('Testing socket connection...');
+        const socket = io('http://localhost:3000', {
+            transports: ['websocket'],
+            reconnection: true
+        });
+
+        socket.on('connect', () => {
+            console.log('Connected to server!');
+            document.getElementById('status').textContent = 'Connected!';
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            document.getElementById('status').textContent = 'Connection error: ' + error;
+        });
+    </script>
+</body>
+
+</html>

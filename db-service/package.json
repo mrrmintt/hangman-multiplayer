@@ -1,0 +1,9 @@
+{
+    "name": "hangman-db-service",
+    "version": "1.0.0",
+    "dependencies": {
+      "express": "^4.17.1",
+      "mongoose": "^6.0.0",
+      "cors": "^2.8.5"
+    }
+  }
