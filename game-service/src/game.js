@@ -20,10 +20,16 @@ class Game {
         this.public = isPublic // Public or private Game
     }
 
-    getRandomWord() {
-        const words = ['JAVASCRIPT', 'NODEJS', 'EXPRESS', 'SOCKET', 'PROGRAMMING'];
-        return words[Math.floor(Math.random() * words.length)];
+    async getRandomWord() {
+        const response = await fetch('https://random-word-api.herokuapp.com/word?lang=de');
+        const data = await response.json();
+        const word = data[0].toUpperCase();
+        console.log("WORT VON APl:", word);
+        this.word = word
+        return word;
     }
+    
+    
     resetGame() {
         this.word = this.getRandomWord();
         this.guessedLetters = new Set();
@@ -123,24 +129,30 @@ class Game {
     }
 
     isWordGuessed() {
-        return [...this.word].every(letter => this.guessedLetters.has(letter));
+        for (let letter of this.word) {
+            if (!this.guessedLetters.has(letter)) {
+                return false; // Wenn ein Buchstabe nicht erraten wurde
+            }
+        }
+        return true; // Wenn alle Buchstaben erraten wurden
     }
-
-
-
     getGameState() {
-        // Sort players by score
+        // Sortiere die Spieler nach Punktzahl
         const sortedPlayers = this.players.map(player => ({
             ...player,
             score: this.scores.get(player.id) || 0
         })).sort((a, b) => b.score - a.score);
-
-        return {
-            word: this.status === 'finished' ?
-                this.word : // Show full word if game is finished
-                [...this.word].map(letter =>
+    
+        const displayedWord = this.status === 'finished' ? 
+            this.word :
+            (typeof this.word === 'string' ? 
+                this.word.split('').map(letter => 
                     this.guessedLetters.has(letter) ? letter : '_'
-                ).join(''),
+                ).join('') 
+                : '');
+    
+        return {
+            word: displayedWord,
             guessedLetters: Array.from(this.guessedLetters),
             remainingGuesses: this.remainingGuesses,
             currentPlayer: this.getCurrentPlayer(),
@@ -148,10 +160,10 @@ class Game {
             players: sortedPlayers,
             timeRemaining: 10,
             playersNeeded: 3 - this.players.length,
-            actualWord: this.word // Always include the actual word
+            actualWord: this.word
         };
     }
-
+    
     getAllGames() {
         return Array.from(games.values());
     }
