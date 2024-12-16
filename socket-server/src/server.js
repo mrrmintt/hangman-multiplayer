@@ -107,7 +107,7 @@ io.on('connection', (socket) => {
 
                     newGameResponses.delete(gameId);
                 } catch (error) {
-                    console.error('Error resetting game or chat:', error);
+                    console.log('Error resetting game or chat:', error);
                     io.to(gameId).emit('error', {
                         message: `Failed to start new game: ${error.message}`
                     });
@@ -125,7 +125,7 @@ io.on('connection', (socket) => {
                     newGameResponses.delete(gameId);
                     activeGames.delete(gameId);
                 } catch (error) {
-                    console.error('Error deleting game:', error);
+                    console.log('Error deleting game:', error);
                     io.to(gameId).emit('error', {
                         message: `Error cleaning up game: ${error.message}`
                     });
@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
             });
             io.to(gameId).emit('chatMessage', response.data);
         } catch (error) {
-            console.error('Error sending chat message:', error);
+            console.log('Error sending chat message:', error);
             socket.emit('error', { message: 'Failed to send chat message' });
         }
     });
@@ -175,7 +175,7 @@ io.on('connection', (socket) => {
                 }
             }
         } catch (error) {
-            console.error('Error making guess:', error);
+            console.log('Error making guess:', error);
             socket.emit('error', {
                 message: error.response?.data?.message || 'Error making guess'
             });
@@ -261,7 +261,7 @@ io.on('connection', (socket) => {
             });
 
         } catch (error) {
-            console.error('Error in joinPublicGame:', error);
+            console.log('Error in joinPublicGame:', error);
             socket.emit('error', {
                 message: error.response?.data?.message || 'Failed to join public game'
             });
@@ -273,7 +273,7 @@ io.on('connection', (socket) => {
         const game = activeGames.get(gameId);
 
         if (!game || !game.publicGame) {
-            console.error('Invalid game or not a public game');
+            console.log('Invalid game or not a public game');
             return;
         }
 
@@ -299,7 +299,7 @@ io.on('connection', (socket) => {
                 gameState: gameResponse.data.gameState
             });
         } catch (error) {
-            console.error('Error resetting game:', error.message);
+            console.log('Error resetting game:', error.message);
             io.to(gameId).emit('error', {
                 message: 'Failed to start a new public game.'
             });
@@ -343,7 +343,7 @@ io.on('connection', (socket) => {
                 message: 'Waiting for other players to join...'
             });
         } catch (error) {
-            console.error('Error creating game:', error.message);
+            console.log('Error creating game:', error.message);
             socket.emit('error', {
                 message: 'Failed to create game: ' + error.message
             });
