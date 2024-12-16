@@ -58,7 +58,7 @@ class ChatServer {
             this.validateGameId(gameId);
             this.chats.set(gameId, new Chat());
 
-            console.log(`Created new chat for game: ${gameId}`);
+           // console.log(`Created new chat for game: ${gameId}`);
             res.json({ success: true, gameId });
         } catch (error) {
             this.handleError(res, error);
@@ -74,7 +74,7 @@ class ChatServer {
             const chat = this.getChatInstance(gameId);
 
             const newMessage = chat.addMessage(username, message);
-            console.log(`New message in game ${gameId} from ${username}`);
+           // console.log(`New message in game ${gameId} from ${username}`);
 
             res.json(newMessage);
         } catch (error) {
@@ -98,7 +98,7 @@ class ChatServer {
             this.validateGameId(gameId);
 
             this.chats.set(gameId, new Chat());
-            console.log(`Reset chat for game: ${gameId}`);
+           // console.log(`Reset chat for game: ${gameId}`);
 
             res.json({
                 success: true,
