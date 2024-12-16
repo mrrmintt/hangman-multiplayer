@@ -119,7 +119,7 @@ let timeLeft = 10;
 let gameStarted = false;
 
 function initializeGame() {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÖÄÜ'.split('');
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'.split('');
     const lettersDiv = document.getElementById('letters');
     letters.forEach(letter => {
         const button = document.createElement('button');
