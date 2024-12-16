@@ -1,4 +1,4 @@
-console.log('Client script loading...');
+//console.log('Client script loading...');
 /*
 * Basically Frontend
 * Core game state management and UI update functions.
@@ -332,7 +332,7 @@ socket.on('error', ({ message }) => {
 });
 
 socket.on('gameStateUpdate', (gameState) => {
-    console.log('Game state update:', gameState);
+   // console.log('Game state update:', gameState);
     updateGameState(gameState);
 });
 
