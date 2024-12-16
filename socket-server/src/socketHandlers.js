@@ -202,20 +202,20 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     let publicGameId = null;
 
     try {
-        // Nur öff spiele und unter 5spiueler
+        // Only public games and under 5 player
         const publicGames = games.getAllGames().filter(game => game.public);
         console.log("Public Games: " + publicGames)
         let targetGame = publicGames.find(game => game.players.length < 5);
 
         if (!targetGame) {
-            // Neues öffentliches Spiel erstellen
-            targetGame = games.createGame(true); // `true` setzt das Spiel als öffentlich
+            
+            targetGame = games.createGame(true); 
             console.log('Public Game created with ID:', targetGame.id);
         }
 
         publicGameId = targetGame.id;
 
-        // Spieler hinzufügen
+        // Add player
         const result = targetGame.addPlayer(socket.id, playerName);
         if (result.success) {
             socket.join(publicGameId);
@@ -235,6 +235,7 @@ function handleJoinPublicGame(io, socket, { playerName }) {
     }
 }
 
+// Handles new game
 async function handleNewGame(io, socket, { gameId }) {
     const game = games.get(gameId);
 
@@ -246,13 +247,13 @@ async function handleNewGame(io, socket, { gameId }) {
 
     try {
         console.log('Starting new public game for Game ID:', gameId);
-        game.isResetting = true; // Setze das Reset-Flag
+        game.isResetting = true; // Reset flag so no double resetting
 
         const gameResponse = await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/reset`);
 
         console.log('Game reset successfully:', gameResponse.data.gameState);
 
-        // Informiere alle Spieler über den Start des neuen Spiels
+        // Informa all players about new game
         io.to(gameId).emit('newGameStarted', {
             message: 'New Public Game is starting!',
             gameState: gameResponse.data.gameState
