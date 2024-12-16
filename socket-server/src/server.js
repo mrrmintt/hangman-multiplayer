@@ -115,14 +115,17 @@ io.on('connection', (socket) => {
             } else {
                 console.log('Some players declined, returning to menu');
                 try {
-                    await axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`);
+                    //await axios.post(`${CHAT_SERVICE_URL}/chats/${gameId}/reset`);
+                    
                     io.to(gameId).emit('returnToMenu', {
                         message: 'New game rejected. Returning to menu...'
                     });
+                    // Delete game locally and on game-service
+                    await axios.post(`${GAME_SERVICE_URL}/games/${gameId}/delete`)
                     newGameResponses.delete(gameId);
                     activeGames.delete(gameId);
                 } catch (error) {
-                    console.error('Error resetting chat:', error);
+                    console.error('Error deleting game:', error);
                     io.to(gameId).emit('error', {
                         message: `Error cleaning up game: ${error.message}`
                     });

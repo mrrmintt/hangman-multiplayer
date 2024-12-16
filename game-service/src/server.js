@@ -246,6 +246,20 @@ app.get('/games/:gameId/scores', async (req, res) => {
     }
 });
 
+// Delete game
+app.post('/games/:gameId/delete', (req, res) => {
+    try {
+        console.log('Game delete request received');
+        const { gameId}= req.params
+        games.delete(gameId)
+        console.log("Game deleted")
+
+    } catch (error) {
+        console.error('Error delete game:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Create new public game
 app.post('/public_game', (req, res) => {
     try {
