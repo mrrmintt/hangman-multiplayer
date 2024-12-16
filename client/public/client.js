@@ -131,9 +131,15 @@ function initializeGame() {
 
 function showStatus(message, type = 'info') {
     console.log('Status:', message, type);
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = message;
-    statusDiv.className = type;
+
+    
+    const statusElements = document.querySelectorAll('.status');
+
+    
+    statusElements.forEach((statusDiv) => {
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${type}`; 
+    });
 }
 function showScoreNotification(points) {
     if (points > 0) {
